@@ -2518,10 +2518,24 @@
     
     .ios-spinner-circle {
       width: 42px; height: 42px;
-      border: 3px solid rgba(230, 0, 18, 0.15); /* Màu nền nhạt */
-      border-top-color: #E60012; /* Màu thanh chạy xoay vòng */
       border-radius: 50%;
       animation: iosSpin 0.9s infinite cubic-bezier(0.6, 0.1, 0.4, 0.9);
+      /* Hiệu ứng chuyển đổi màu sắc mượt mà */
+      transition: border-color 0.4s ease, border-top-color 0.4s ease;
+    }
+
+    /* Các mốc màu sắc của vòng xoay */
+    .spinner-red {
+      border: 3px solid rgba(230, 0, 18, 0.15);
+      border-top-color: #E60012;
+    }
+    .spinner-yellow {
+      border: 3px solid rgba(245, 158, 11, 0.15);
+      border-top-color: #F59E0B;
+    }
+    .spinner-green {
+      border: 3px solid rgba(16, 185, 129, 0.15);
+      border-top-color: #10B981;
     }
     
     @keyframes iosSpin {
@@ -2589,8 +2603,8 @@
   </style>
 
   <div id="globalLoader" class="ios-spinner-overlay">
-    <div class="ios-spinner-circle"></div>
-    <div class="ios-spinner-text">Đang tải dữ liệu...</div>
+    <div class="ios-spinner-circle spinner-red"></div>
+    <div class="ios-spinner-text">nhanh thôi, chờ tôi chút nhé...</div>
   </div>
 
   <!-- KHUNG HIỂN THỊ MODAL TÙY CHỈNH -->
@@ -4063,72 +4077,114 @@ function updateChartView() {
     }
 
     // Hàm render biểu đồ Chart.js (Biểu đồ tổng quan)
-    function drawMainChart(labels, nhap, xuat, ton) {
-      const ctx = document.getElementById('mainChart').getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-      chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              type: 'bar',
-              label: 'Nhập',
-              data: nhap,
-              backgroundColor: '#10B981',
-              borderRadius: 3,
-              barPercentage: 0.55,
-              order: 2
-            },
-            {
-              type: 'bar',
-              label: 'Xuất',
-              data: xuat,
-              backgroundColor: '#EF4444',
-              borderRadius: 3,
-              barPercentage: 0.55,
-              order: 3
-            },
-            {
-              type: 'line',
-              label: 'Tồn kho',
-              data: ton,
-              borderColor: '#2563EB',
-              backgroundColor: '#ffffff',
-              borderWidth: 2,
-              pointRadius: 3,
-              pointBorderColor: '#2563EB',
-              pointBackgroundColor: '#ffffff',
-              pointBorderWidth: 2,
-              tension: 0.35,
-              order: 1
-            }
-          ]
+function drawMainChart(labels, nhap, xuat, ton) {
+  const canvas = document.getElementById('mainChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  // Dọn dẹp biểu đồ cũ để tránh lỗi vẽ chồng
+  if (window.chartInstance) {
+    window.chartInstance.destroy();
+  }
+
+  // Tạo hiệu ứng Gradient mờ dần cho đường Tồn Kho
+  const gradientTon = ctx.createLinearGradient(0, 0, 0, 300);
+  gradientTon.addColorStop(0, 'rgba(37, 99, 235, 0.25)'); // Xanh dương nhạt phía trên
+  gradientTon.addColorStop(1, 'rgba(37, 99, 235, 0.0)');  // Trong suốt phía dưới đáy
+
+  window.chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: 'line',
+          label: 'Tồn kho',
+          data: ton,
+          borderColor: '#2563EB',
+          backgroundColor: gradientTon,
+          borderWidth: 2.5,
+          fill: true,           // Bật chế độ đổ màu nền (Area Chart)
+          tension: 0.4,         // Làm cong đường thẳng cho mềm mại
+          pointRadius: 0,       // Ẩn các chấm tròn mặc định để giảm nhiễu
+          pointHoverRadius: 6,  // Chỉ hiện chấm tròn to khi di chuột vào
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#2563EB',
+          pointBorderWidth: 2.5,
+          order: 1
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: { usePointStyle: true, boxWidth: 8, font: { size: 12, weight: '600' } }
-            }
+        {
+          type: 'bar',
+          label: 'Nhập',
+          data: nhap,
+          backgroundColor: '#10B981',
+          borderRadius: 6,      // Bo góc cột mềm mại
+          barPercentage: 0.7,   // Tăng độ rộng để cột mập mạp hơn
+          categoryPercentage: 0.75,
+          order: 2
+        },
+        {
+          type: 'bar',
+          label: 'Xuất',
+          data: xuat,
+          backgroundColor: '#F43F5E',
+          borderRadius: 6,
+          barPercentage: 0.7,
+          categoryPercentage: 0.75,
+          order: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',          // Hover 1 điểm sẽ hiển thị cả Nhập, Xuất, Tồn
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            usePointStyle: true, // Đổi icon chú thích thành hình tròn/viên thuốc
+            boxWidth: 8,
+            font: { size: 12, weight: '600', family: "'TheJamsil', sans-serif" },
+            padding: 20
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(15, 23, 42, 0.9)', // Nền tối sang trọng
+          titleFont: { size: 13, family: "'TheJamsil', sans-serif" },
+          bodyFont: { size: 12, family: "'TheJamsil', sans-serif" },
+          padding: 12,
+          cornerRadius: 8,
+          boxPadding: 4
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false }, // Ẩn hoàn toàn lưới dọc
+          ticks: { font: { size: 11, family: "'TheJamsil', sans-serif" }, color: '#64748B' }
+        },
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: '#E2E8F0',
+            borderDash: [5, 5], // Chuyển lưới ngang thành đường đứt nét
+            drawBorder: false   // Ẩn đường viền trục Y
           },
-          scales: {
-            x: {
-              ticks: { font: { size: 10.5 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 16 },
-              grid: { display: false }
-            },
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'Số lượng (Cái)', font: { size: 11 } },
-              ticks: { font: { size: 10.5 } },
-              grid: { color: '#F1F5F9' }
-            }
+          ticks: { font: { size: 11, family: "'TheJamsil', sans-serif" }, color: '#64748B' },
+          title: { 
+            display: true, 
+            text: 'Số lượng (Cái)', 
+            font: { size: 11, weight: '600', family: "'TheJamsil', sans-serif" }, 
+            color: '#64748B' 
           }
         }
-      });
+      }
     }
+  });
+}
 
     // Hàm render biểu đồ Các kho đã mua (Stacked Bar)
     function drawKhoPurchaseChart(labels, datasets) {
@@ -5533,9 +5589,9 @@ function renderHistoryTable() {
             <td><span class="pill-tx-type ${pillClass}">${typeIcon} ${r.loai}</span></td>
             <td class="fw-bold" style="color:#1E293B;">${r.kho}</td>
             <td class="fw-bold" style="font-size:11.5px; color:#475569;">${r.maSP}</td>
-            <td style="width:40px; padding-right:2px;">
-              <img src="${imgUrl}" class="prod-img-mini">
-            </td>
+          <td style="width:40px; padding-right:2px;">
+          <img src="${imgUrl}" class="prod-img-mini" onerror="this.onerror=null; this.src='https://placehold.co/40x40/E2E8F0/64748B?text=SP';">
+        </td>
             <td class="text-start">
               <div class="stacked-text">
                 <!-- Bổ sung white-space: nowrap để text nằm 1 dòng -->
@@ -5802,11 +5858,43 @@ function recalcReconTotals() {
        THƯ VIỆN ĐIỀU KHIỂN HỘP THOẠI (MODAL) VÀ SPINNER PHONG CÁCH IOS NATIVE
     ========================================================================= */
     // 1. Quản lý trạng thái Spinner Loading
+  
+// 1. Quản lý trạng thái Spinner Loading (Đỏ -> Vàng -> Xanh lá)
+    let loaderTimer;
+
     function showGlobalLoader() {
-      document.getElementById('globalLoader').classList.add('show');
+      const loader = document.getElementById('globalLoader');
+      const circle = loader.querySelector('.ios-spinner-circle');
+      const text = loader.querySelector('.ios-spinner-text');
+
+      // Giai đoạn 1: Mới bắt đầu (Màu Đỏ)
+      clearTimeout(loaderTimer);
+      circle.className = 'ios-spinner-circle spinner-red';
+      text.innerText = 'Đang kết nối...';
+      loader.classList.add('show');
+
+      // Giai đoạn 2: Giả lập chờ tải lâu (Chuyển màu Vàng sau 1.5 giây)
+      loaderTimer = setTimeout(() => {
+        circle.className = 'ios-spinner-circle spinner-yellow';
+        text.innerText = 'Đang đồng bộ dữ liệu...';
+      }, 1500);
     }
+
     function hideGlobalLoader() {
-      document.getElementById('globalLoader').classList.remove('show');
+      const loader = document.getElementById('globalLoader');
+      const circle = loader.querySelector('.ios-spinner-circle');
+      const text = loader.querySelector('.ios-spinner-text');
+
+      clearTimeout(loaderTimer);
+
+      // Giai đoạn 3: Tải xong (Chuyển màu Xanh lá báo thành công)
+      circle.className = 'ios-spinner-circle spinner-green';
+      text.innerText = 'Đã hoàn tất!';
+
+      // Dừng lại 0.5 giây để người dùng kịp nhìn thấy màu xanh lá rồi mới ẩn đi
+      setTimeout(() => {
+        loader.classList.remove('show');
+      }, 500);
     }
 
     // 2. Hàm lõi tạo hộp thoại Modal
