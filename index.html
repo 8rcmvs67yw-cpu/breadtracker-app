@@ -7,8 +7,36 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- MÃ MỚI: Thư viện JsBarcode tạo mã vạch chuẩn để súng POS thu ngân quét được -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
   <style>
+    /* ===== TÙY CHỈNH THANH CUỘN (SCROLLBAR) TOÀN TRANG ===== */
+    /* 1. Dành cho các trình duyệt Chrome, Safari, Edge */
+    ::-webkit-scrollbar {
+      width: 6px; /* Chiều rộng của thanh cuộn dọc (rất mảnh) */
+      height: 6px; /* Chiều cao của thanh cuộn ngang */
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #ffffff; /* Màu nền của rãnh cuộn (Màu trắng tệp với trang) */
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #e2e8f0; /* Màu của tay cầm trượt (Trắng xám cực nhạt để dễ nhìn) */
+      border-radius: 10px; /* Bo tròn 2 đầu thanh trượt cho mềm mại */
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #cbd5e1; /* Đậm lên một chút xíu khi người dùng đưa chuột vào */
+    }
+
+    /* 2. Dành cho trình duyệt Firefox */
+    * {
+      scrollbar-width: thin; /* Ép thanh cuộn hiển thị dạng mảnh */
+      scrollbar-color: #e2e8f0 #ffffff; /* Màu tay cầm trượt (trắng xám) và màu rãnh (trắng) */
+    }
+
     :root {
       --lotte-red: #E60012;
       --navy-dark: #002B5E;
@@ -1517,7 +1545,8 @@
 
 .dn-info-label {
       font-weight: bold;
-      width: 185px; /* Thu hẹp cột nhãn để dòng Địa chỉ và thông tin kéo sát vào */
+      width: 1%; /* MÃ MỚI: Ép cột nhãn co lại ôm khít nội dung */
+      padding-right: 8px; /* MÃ MỚI: Giữ một khoảng cách nhỏ nhắn giữa nhãn và dữ liệu */
       white-space: nowrap;
     }
 
@@ -1678,17 +1707,30 @@
     .dn-copy-page.dn-2-copies .dn-company-block { font-size: 10.5px; line-height: 1.15; }
     .dn-copy-page.dn-2-copies .dn-title { font-size: 12.5px; font-weight: bold; margin: 2px 0 3px 0; }
     .dn-copy-page.dn-2-copies .dn-info-wrapper { margin-bottom: 3px; gap: 8px; }
-    .dn-copy-page.dn-2-copies .dn-info-table td { padding: 0.5px 3px; font-size: 10.5px; line-height: 1.15; }
-    .dn-copy-page.dn-2-copies .dn-info-label { width: 185px; }
-    .dn-copy-page.dn-2-copies .dn-proposer-box { width: 105px; margin-right: 0px; }
-    .dn-copy-page.dn-2-copies .dn-proposer-box td { padding: 1.5px 4px; font-size: 10px; }
-    .dn-copy-page.dn-2-copies .dn-proposer-sign-space { height: 28px; }
+    /* MÃ MỚI: Tăng font-size toàn bộ từ 10px-10.5px lên 11px-11.5px */
+    .dn-copy-page.dn-2-copies .dn-info-table td { padding: 0.5px 3px; font-size: 11.5px; line-height: 1.2; } 
+   /* MÃ MỚI: Để độ rộng tự động (width: auto) và cách nhẹ 4px để nội dung nằm sát ngay sau nhãn */
+    .dn-copy-page.dn-2-copies .dn-info-label { width: auto; margin-right: 4px; }
+    /* MÃ MỚI: Kéo dài chiều cao ô Người đề xuất lên 78px (hoặc rộng 165px) cho cân đối */
+    .dn-copy-page.dn-2-copies .dn-proposer-box { width: 165px; margin-right: 0px; }
+    .dn-copy-page.dn-2-copies .dn-proposer-box td { padding: 3px 6px; font-size: 11px; } 
+    .dn-copy-page.dn-2-copies .dn-proposer-sign-space { height: 78px; }
+
+    /* MÃ MỚI: Định dạng mã vạch SVG sắc nét tuyệt đối khi xem và khi in ra giấy cho POS quét */
+    .dn-barcode-svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+      shape-rendering: crispEdges; /* Giữ cạnh vạch đen sắc nét không bị nhòe mực khi in */
+    }
     .dn-copy-page.dn-2-copies .dn-items-table { margin-bottom: 3px; }
     .dn-copy-page.dn-2-copies .dn-items-table th,
-    .dn-copy-page.dn-2-copies .dn-items-table td { padding: 2px 4px; font-size: 10px; line-height: 1.1; }
-    .dn-copy-page.dn-2-copies .dn-sign-row-1 { margin-top: 2px; font-size: 10.5px; }
-    /* Kéo Ngành Hàng & Trực Ban lên (margin-top: 26px) và tạo khoảng trống ký tên phía dưới (margin-bottom: 38px) */
-    .dn-copy-page.dn-2-copies .dn-sign-row-2 { margin-top: 26px; margin-bottom: 38px; font-size: 11px; font-weight: bold; }
+    .dn-copy-page.dn-2-copies .dn-items-table td { padding: 2px 4px; font-size: 11px; line-height: 1.15; } 
+    .dn-copy-page.dn-2-copies .dn-sign-row-1 { margin-top: 2px; font-size: 11px; } 
+    
+    /* MÃ MỚI: Tăng margin-top lên 90px để dời hẳn "Ngành Hàng" và "Trực Ban" xuống dưới, tạo khoảng trống ký tên rất rộng rãi ở phía trên */
+    .dn-copy-page.dn-2-copies .dn-sign-row-2 { margin-top: 90px; margin-bottom: 4px; font-size: 11px; font-weight: normal; color: #000000; }
 
     /* Chế độ 3 Liên / 1 Trang A4 (Dự phòng khi cần in 3 liên) */
     .dn-copy-page.dn-3-copies .dn-top-header { padding-bottom: 3px; border-bottom: 2px double #000; }
@@ -1737,10 +1779,10 @@
       .dn-modal-body { padding: 0 !important; background: #fff !important; overflow: visible !important; }
       .dn-paper-a4 { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; margin: 0 !important; }
 
-/* Chia đều 2 liên trên đúng 1 tờ A4, ép sát mép trên (1.5mm) để dư chỗ ký tên ở đáy mỗi liên */
-      .dn-copy-page.dn-2-copies {
-        height: 147mm !important;
-        padding: 1.5mm 5mm 6mm 5mm !important;
+/* Chia đều 2 liên trên đúng 1 tờ A4, khống chế chiều cao nghiêm ngặt để không bị tràn mép trên */
+     .dn-copy-page.dn-2-copies {
+        height: 145mm !important; /* Giảm chiều cao */
+        padding: 4mm 5mm 2mm 5mm !important; /* Tăng lề trên (padding-top) lên 4mm để đẩy logo xuống */
         border-bottom: 1px dashed #64748B !important;
         overflow: hidden !important;
         page-break-inside: avoid !important;
@@ -3552,7 +3594,8 @@
     .horeca-table th, .horeca-table td { border: 1px solid #000; padding: 6px 8px; vertical-align: middle; }
     .horeca-table th { text-align: center; font-weight: bold; }
     .horeca-table .sub-italic { display: block; font-style: italic; font-weight: normal; font-size: 11px; }
-    .horeca-sign { display: flex; justify-content: space-between; padding: 0 50px; font-weight: bold; margin-top: 10px;}
+    /* MÃ MỚI: Tăng padding từ 50px lên 80px để đẩy "B2B" và "FO" vào trong nhiều hơn */
+    .horeca-sign { display: flex; justify-content: space-between; padding: 0 80px; font-weight: bold; margin-top: 10px;}
     
     @media print {
       body.print-mode-horeca #deliveryNoteModal, body.print-mode-horeca #salesSlipModal { display: none !important; }
@@ -3561,7 +3604,8 @@
         position: absolute !important; left: 0 !important; top: 0 !important;
         width: 210mm !important; background: #fff !important; padding: 0 !important; margin: 0 !important; display: block !important;
       }
-      body.print-mode-horeca .horeca-paper-a4 { box-shadow: none !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      /* MÃ MỚI: Thêm padding-top: 15mm khi in để dời tiêu đề và toàn bộ nội dung xuống dưới */
+      body.print-mode-horeca .horeca-paper-a4 { box-shadow: none !important; width: 100% !important; margin: 0 !important; padding: 15mm 0 0 0 !important; }
     }
   </style>
   <style id="dynamicPagePrintRule"></style>
@@ -5292,16 +5336,35 @@ function handleSaveTx(e) {
       const nguoiThucHien = first.nguoiThucHien || 'Nguyễn Hữu Quan';
       const diaChiGiao = khInfo.diaChiGiaoHang;
 
+      // Hàm phụ trợ: Tự động khôi phục số 0 ở đầu nếu mã hàng bị Google Sheet cắt mất (VD: 411816700006 -> 0411816700006)
+      const formatBarcodeWithZero = (code) => {
+        let s = String(code || '').trim();
+        if (!s) return '';
+        // Nếu là chuỗi 12 chữ số (thiếu 1 số 0 của chuẩn 13 số) hoặc bắt đầu bằng '411' thì bù số '0' vào đầu
+        if ((/^\d{12}$/.test(s) || s.startsWith('411')) && !s.startsWith('0')) {
+          return '0' + s;
+        }
+        return s;
+      };
+
       const itemsHtml = txList.map((item, idx) => {
         const qty = Number(item.soLuong) || 0;
         const price = Number(item.donGia !== undefined ? item.donGia : 4100);
         const amount = qty * price;
+        
+        // MÃ MỚI: Chuẩn hóa Mã hàng luôn có số 0 ở đầu và dùng mã đó để vẽ Barcode cho máy POS
+        const displayMaSP = formatBarcodeWithZero(item.maSP);
+        const barcodeVal = formatBarcodeWithZero(item.maVach || item.maSP);
+
         return `
           <tr class="dn-item-row">
             <td style="text-align: center;">${idx + 1}</td>
             <td class="dn-editable" contenteditable="true">${item.tenSP || ''}</td>
-            <td class="dn-editable" contenteditable="true">${item.maSP || ''}</td>
-            <td class="dn-editable" contenteditable="true">${item.maVach || ''}</td>
+            <td style="text-align: center; font-weight: bold;" class="dn-editable" contenteditable="true">${displayMaSP}</td>
+            <td style="text-align: center; padding: 3px 6px;">
+              <!-- MÃ MỚI: Thẻ SVG hiển thị mã vạch thật để súng POS thu ngân quét -->
+              <svg class="dn-barcode-svg" data-barcode="${barcodeVal}"></svg>
+            </td>
             <td style="text-align: center;" class="dn-editable" contenteditable="true">${item.donVi || 'Cái'}</td>
             <td style="text-align: center;" class="dn-editable" contenteditable="true">${item.thueGTGT || '0%'}</td>
             <td style="text-align: right;" class="dn-row-qty" data-qty="${qty}">${qty.toLocaleString('en-US')}</td>
@@ -5316,7 +5379,8 @@ function handleSaveTx(e) {
         <div class="dn-copy-page ${copyClass}">
           <div class="dn-top-header">
             <div class="dn-logo-block" style="display: flex; align-items: center; gap: 6px; width: 155px; flex-shrink: 0;">
-              <img src="https://lh3.googleusercontent.com/d/1GvOVVkPWXTpT3F3HieMlQVjTE-lPhcRD" alt="Lotte Mart Logo" style="height: 22px; width: auto; object-fit: contain;">
+              <!-- MÃ MỚI: Giảm chiều cao (height) logo từ 22px xuống 16px để logo nhỏ lại -->
+              <img src="https://lh3.googleusercontent.com/d/1GvOVVkPWXTpT3F3HieMlQVjTE-lPhcRD" alt="Lotte Mart Logo" style="height: 16px; width: auto; object-fit: contain;">
             </div>
             <div class="dn-company-block">
               <div style="font-weight: bold; font-size: 11px;">CÔNG TY CỔ PHẦN TRUNG TÂM THƯƠNG MẠI LOTTE VIỆT NAM – CHI NHÁNH ĐỒNG NAI</div>
@@ -5331,36 +5395,38 @@ function handleSaveTx(e) {
           <div class="dn-title">PHIẾU GIAO HÀNG / DELIVERY NOTE</div>
           
           <div class="dn-info-wrapper">
+            <!-- MÃ MỚI: Đặt nhãn và dữ liệu vào chung 1 thẻ <td> để chữ nằm sát nhau ngay lập tức -->
             <table class="dn-info-table">
-              <tr><td class="dn-info-label">Ngày (Date):</td><td class="dn-editable" contenteditable="true">${ngayGiao}</td></tr>
-              <tr><td class="dn-info-label">Họ tên người mua hàng <i>(Customer)</i>:</td><td class="dn-editable" contenteditable="true"></td></tr>
-              <tr><td class="dn-info-label">Tên đơn vị <i>(Company)</i>:</td><td class="dn-editable" contenteditable="true">${khInfo.tenDonVi}</td></tr>
-              <tr><td class="dn-info-label">Mã số thuế <i>(Taxcode)</i>:</td><td class="dn-editable" contenteditable="true">${khInfo.maSoThue}</td></tr>
-              <tr><td class="dn-info-label">Địa chỉ <i>(Address)</i>:</td><td class="dn-editable" contenteditable="true">${khInfo.diaChi}</td></tr>
-              <tr><td class="dn-info-label">Hình thức thanh toán <i>(Payment Method)</i>:</td><td class="dn-editable" contenteditable="true">Công nợ</td></tr>
-              <tr><td class="dn-info-label">Mã thẻ thành viên:</td><td class="dn-editable" contenteditable="true"></td></tr>
-              <tr><td class="dn-info-label">Email:</td><td class="dn-editable" contenteditable="true"></td></tr>
-              <tr><td class="dn-info-label">Địa chỉ giao hàng :</td><td class="dn-editable" contenteditable="true">${diaChiGiao}</td></tr>
+              <tr><td><span class="dn-info-label">Ngày (Date):</span> <span class="dn-editable" contenteditable="true">${ngayGiao}</span></td></tr>
+              <tr><td><span class="dn-info-label">Họ tên người mua hàng <i>(Customer)</i>:</span> <span class="dn-editable" contenteditable="true" style="display:inline-block; min-width:120px;"></span></td></tr>
+              <tr><td><span class="dn-info-label">Tên đơn vị <i>(Company)</i>:</span> <span class="dn-editable" contenteditable="true">${khInfo.tenDonVi}</span></td></tr>
+              <tr><td><span class="dn-info-label">Mã số thuế <i>(Taxcode)</i>:</span> <span class="dn-editable" contenteditable="true">${khInfo.maSoThue}</span></td></tr>
+              <tr><td><span class="dn-info-label">Địa chỉ <i>(Address)</i>:</span> <span class="dn-editable" contenteditable="true">${khInfo.diaChi}</span></td></tr>
+              <tr><td><span class="dn-info-label">Hình thức thanh toán <i>(Payment Method)</i>:</span> <span class="dn-editable" contenteditable="true">Công nợ</span></td></tr>
+              <tr><td><span class="dn-info-label">Mã thẻ thành viên:</span> <span class="dn-editable" contenteditable="true" style="display:inline-block; min-width:120px;"></span></td></tr>
+              <tr><td><span class="dn-info-label">Email:</span> <span class="dn-editable" contenteditable="true" style="display:inline-block; min-width:120px;"></span></td></tr>
+              <tr><td><span class="dn-info-label">Địa chỉ giao hàng :</span> <span class="dn-editable" contenteditable="true">${diaChiGiao}</span></td></tr>
             </table>
+            <!-- MÃ MỚI: Gộp phần trống ký tên của Người đề xuất thành 1 ô lớn duy nhất -->
             <table class="dn-proposer-box">
               <tr><td>Người đề xuất</td></tr>
-              <tr><td class="dn-proposer-sign-space"></td></tr>
-              <tr><td class="dn-editable" contenteditable="true">${nguoiThucHien}</td></tr>
+              <tr><td class="dn-proposer-sign-space dn-editable" contenteditable="true"></td></tr>
             </table>
           </div>
 
-          <table class="dn-items-table">
+<table class="dn-items-table">
             <thead>
               <tr>
-                <th style="width: 32px;"><b>STT</b><i>No</i></th>
-                <th style="width: 185px;"><b>TÊN HÀNG</b><i>Item</i></th>
-                <th style="width: 190px;"><b>MÃ HÀNG</b><i>Barcode Number</i></th>
-                <th style="width: 110px;"><b>MÃ VẠCH</b><i>Barcode</i></th>
-                <th style="width: 46px;"><b>ĐVT</b><i>Unit</i></th>
-                <th style="width: 54px;"><b>THUE<br>GTGT</b></th>
-                <th style="width: 70px;"><b>SỐ LƯỢNG</b><i>Quantity</i></th>
-                <th style="width: 75px;"><b>ĐƠN GIÁ</b><i>Price</i></th>
-                <th style="width: 90px;"><b>THÀNH TIỀN</b><i>Amount</i></th>
+                <th style="width: 30px;"><b>STT</b><i>No</i></th>
+                <th style="width: 175px;"><b>TÊN HÀNG</b><i>Item</i></th>
+                <th style="width: 135px;"><b>MÃ HÀNG</b><i>Barcode Number</i></th>
+                <!-- MÃ MỚI: Tăng độ rộng cột Mã Vạch lên 165px để các vạch đen trắng thưa, rõ, dễ quét bằng súng POS -->
+                <th style="width: 165px;"><b>MÃ VẠCH</b><i>Barcode</i></th>
+                <th style="width: 44px;"><b>ĐVT</b><i>Unit</i></th>
+                <th style="width: 50px;"><b>THUE<br>GTGT</b></th>
+                <th style="width: 68px;"><b>SỐ LƯỢNG</b><i>Quantity</i></th>
+                <th style="width: 72px;"><b>ĐƠN GIÁ</b><i>Price</i></th>
+                <th style="width: 88px;"><b>THÀNH TIỀN</b><i>Amount</i></th>
                 <th><b>GHI CHÚ</b><i>Remark</i></th>
               </tr>
             </thead>
@@ -5382,8 +5448,9 @@ function handleSaveTx(e) {
           </div>
           
           <div class="dn-sign-row-2">
-            <div>Ngành Hàng</div>
-            <div>Trực Ban</div>
+            <!-- MÃ MỚI: Thêm thẻ <strong> và phần tiếng Anh <i> cho đồng bộ -->
+            <div><strong>Ngành Hàng</strong> <i>(Department)</i></div>
+            <div><strong>Trực Ban</strong> <i>(Duty Manager)</i></div>
             <div></div>
             <div></div>
           </div>
@@ -5391,10 +5458,30 @@ function handleSaveTx(e) {
       `;
 
       document.getElementById('dnPrintableContainer').innerHTML = Array(SO_LIEN_TREN_1_TRANG).fill(singleTemplate).join('');
+      
+      // MÃ MỚI: Vẽ mã vạch chuẩn CODE128 sắc nét cho toàn bộ các dòng sản phẩm
+      if (typeof JsBarcode !== 'undefined') {
+        document.querySelectorAll('#dnPrintableContainer .dn-barcode-svg').forEach(svgEl => {
+          const val = svgEl.getAttribute('data-barcode');
+          if (val) {
+            try {
+              JsBarcode(svgEl, val, {
+                format: "CODE128", // Chuẩn CODE128 đọc cực nhạy trên mọi máy POS thu ngân với chuỗi số có số 0 ở đầu
+                width: 1.35,       // Độ dày vạch tiêu chuẩn dễ quét
+                height: 26,        // Chiều cao vạch gọn gàng trong dòng bảng
+                displayValue: false, // Ẩn số bên dưới vạch vì đã có cột MÃ HÀNG kế bên
+                margin: 2
+              });
+            } catch (e) {
+              console.warn("Lỗi tạo barcode:", e);
+            }
+          }
+        });
+      }
+
       recalcDeliveryNoteTotals();
       document.getElementById('deliveryNoteModal').classList.add('show');
     }
-
     function recalcDeliveryNoteTotals() {
       const copyPages = document.querySelectorAll('.dn-copy-page');
       copyPages.forEach(page => {
@@ -5442,6 +5529,11 @@ function handleSaveTx(e) {
       closeAllTxActionMenus();
 
       if (menu && !isShowing) {
+        // MÃ MỚI: Di chuyển menu ra thẻ <body> để thoát khỏi vùng bị cắt của bảng
+        if (menu.parentNode !== document.body) {
+          document.body.appendChild(menu);
+        }
+
         menu.classList.add('show');
         btn.classList.add('active');
 
@@ -5471,6 +5563,10 @@ function handleSaveTx(e) {
 
 function renderHistoryTable() {
       if (!APP_STATE) return;
+      
+      // MÃ MỚI: Dọn dẹp các menu cũ đã được gắn vào body để tránh rác HTML
+      document.querySelectorAll('body > .tx-action-menu').forEach(el => el.remove());
+
       const q = document.getElementById('searchTx').value.trim().toLowerCase();
       const loaiFilter = document.getElementById('filterLoaiTx').value;
 
