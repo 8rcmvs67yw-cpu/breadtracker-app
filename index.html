@@ -3279,118 +3279,519 @@
     .action-btn-icon.sales { color: #2563EB; background: #EFF6FF; border-color: #BFDBFE; }
     .action-btn-icon.edit  { color: #3B82F6; background: #EFF6FF; border-color: #BFDBFE; }
     .action-btn-icon.del   { color: #EF4444; background: #FEF2F2; border-color: #FECACA; }
-    /* ===== TỐI ƯU GIAO DIỆN MOBILE (MOBILE APP UI) ===== */
+    /* ===== TỐI ƯU GIAO DIỆN MOBILE CHUẨN APPLE iOS (MOBILE APP UI) ===== */
     @media (max-width: 768px) {
-      /* 1. Chuyển Sidebar (Menu trái) thành thanh điều hướng dưới đáy (Bottom Navigation) */
+      /* 1. Khung trang & Thanh điều hướng đáy (Bottom Navigation có Safe-Area iOS) */
       body {
         flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
       }
       .sidebar {
         width: 100%;
-        height: 65px;
+        height: calc(62px + env(safe-area-inset-bottom, 0px));
+        padding: 0 0 env(safe-area-inset-bottom, 0px) 0;
         flex-direction: row;
         position: fixed;
         bottom: 0;
         left: 0;
-        padding: 0;
-        background-color: #EBF0F5;
-        box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
-        z-index: 9999;
-        order: 2;
+        background: rgba(235, 240, 245, 0.94);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+        border-top: 1px solid rgba(203, 213, 225, 0.65);
         border-right: none;
+        z-index: 9990;
+        order: 2;
       }
       .brand-section {
-        display: none; /* Ẩn logo ở thanh điều hướng đáy */
+        display: none;
       }
       .nav-list {
         flex-direction: row;
         justify-content: space-around;
         align-items: center;
         width: 100%;
-        height: 100%;
-        padding: 0 10px;
+        height: 62px;
+        padding: 0 16px;
         margin: 0;
         gap: 0;
       }
       .nav-btn {
-        width: 48px;
-        height: 48px;
-      }
-      
-      /* 2. Dành không gian cho nội dung chính để không bị thanh đáy che khuất */
-      .main-wrapper {
-        order: 1;
-        height: calc(100vh - 65px); 
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
       }
 
-      /* 3. Sắp xếp lại Header */
+      /* 2. Vùng cuộn nội dung chính không bị che bởi thanh điều hướng đáy */
+      .main-wrapper {
+        order: 1;
+        height: calc(100vh - 62px);
+        height: calc(100dvh - 62px - env(safe-area-inset-bottom, 0px));
+      }
+      .content-scroll {
+        padding: 8px 10px 28px 10px !important;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* 3. Top Header & Thanh lọc thời gian iOS gọn gàng, không tràn ngang */
       .top-header {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px 12px !important;
+      }
+      #mainPageTitle {
+        font-size: 17px !important;
+        line-height: 1.2;
+      }
+      #mainPageDesc {
+        font-size: 11px !important;
+        line-height: 1.3;
+        margin-top: 2px !important;
       }
       .header-controls {
         width: 100%;
+        display: flex;
+        align-items: center;
         justify-content: space-between;
+        gap: 8px;
       }
       .ios-search-bar {
-        width: calc(100% - 46px); /* Chừa chỗ cho nút chuông thông báo */
+        flex: 1;
+        min-width: 0;
+        width: auto;
+        flex-wrap: wrap;
         justify-content: space-between;
+        padding: 4px 6px;
+        gap: 4px;
+      }
+      .ios-time-tabs {
+        display: flex;
+        flex: 1 1 auto;
+        justify-content: space-between;
+        gap: 2px;
+      }
+      .ios-tab {
+        flex: 1;
+        text-align: center;
+        padding: 5px 6px;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .ios-date-input {
+        font-size: 11.5px;
+        padding: 2px 4px;
+        max-width: 128px;
+      }
+      .notif-bell {
+        flex-shrink: 0;
+        width: 36px !important;
+        height: 36px !important;
       }
 
-      /* 4. Cấu trúc lại các khối Lưới (Grid) */
+      /* 4. Lưới 4 Thẻ KPI Tổng quan (Hiển thị 2x2 cân đối chuẩn Apple) */
       .kpi-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 cột thẻ số liệu thay vì 4 */
-      }
-      .recon-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 12px;
       }
-      
-      /* 5. Tối ưu Form & Nút bấm */
+      .kpi-card-modern {
+        padding: 10px 11px;
+        min-height: 106px;
+        border-radius: 12px;
+      }
+      .kpi-top-bar {
+        gap: 4px;
+        margin-bottom: 4px;
+      }
+      .kpi-top-left {
+        gap: 6px;
+        min-width: 0;
+      }
+      .kpi-icon-modern {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+      }
+      .kpi-icon-modern svg {
+        width: 15px;
+        height: 15px;
+      }
+      .kpi-title-modern {
+        font-size: 11px !important;
+        line-height: 1.2;
+      }
+      .kpi-chevron-btn {
+        width: 18px;
+        height: 18px;
+        font-size: 8px;
+      }
+      .kpi-middle-qty {
+        margin-bottom: 4px;
+      }
+      .kpi-value-modern {
+        font-size: 16.5px;
+      }
+      .kpi-value-modern small {
+        font-size: 10.5px;
+      }
+      .kpi-price-label-row {
+        font-size: 10px;
+        gap: 4px;
+      }
+      .kpi-price-label-row span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .kpi-price-value {
+        font-size: 12px;
+        padding-left: 15px;
+      }
+      .kpi-real-bread-bg {
+        width: 78px;
+        height: 64px;
+        opacity: 0.11;
+      }
+
+      /* 5. Biểu đồ & Bảng chi tiết trên Dashboard */
+      .dash-card {
+        padding: 12px 10px;
+        border-radius: 12px;
+      }
+      .dash-card-title {
+        font-size: 13.5px;
+      }
+      .donut-wrap {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      .donut-canvas-box {
+        width: 155px;
+        height: 155px;
+      }
+      .hsd-struct-table-wrap {
+        width: 100%;
+      }
+      .apple-table-wrap,
+      .table-wrap,
+      .table-responsive,
+      .recon-table-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+      .table-apple {
+        min-width: 500px;
+      }
+      .table-apple thead th,
+      .table-apple tbody td,
+      .table-apple tfoot td {
+        padding: 9px 8px;
+        font-size: 11.5px;
+        white-space: nowrap;
+      }
+
+      /* 6. Tab Quản lý hàng hóa (Form Nhập/Xuất & Lịch sử giao dịch) */
+      .app-card {
+        padding: 12px 10px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+      }
       .neo-toggle-group {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        width: 100%;
+        padding: 6px;
+      }
+      .neo-toggle-btn {
+        width: 100%;
+        min-width: 0;
+        height: 36px;
+        font-size: 11px;
+        padding: 0 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #pane-transaction .d-flex.align-items-center.gap-3 {
+        flex-wrap: wrap;
+        gap: 6px !important;
+        width: 100%;
+        justify-content: space-between;
+      }
+      #txForm .row.g-2 > [class*="col-"] {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+      }
+      .history-header-wrapper {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+        margin-bottom: 12px !important;
+      }
+      .history-title-text h2 {
+        font-size: 15.5px !important;
+      }
+      .history-controls {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px !important;
+      }
+      .search-box-premium {
+        flex: 1 1 100%;
+        width: 100% !important;
+      }
+      #filterLoaiTx {
+        flex: 1 1 100%;
+        width: 100% !important;
+      }
+      .table-premium-modern {
+        min-width: 720px;
+      }
+
+      /* 7. Tab Đối chiếu công nợ (Thẻ MTD, Thẻ kho & Thanh công cụ lọc) */
+      .recon-mtd-top-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .recon-mtd-banner {
+        padding: 10px 12px;
+        min-height: 66px;
+        gap: 10px;
+        border-radius: 12px;
+      }
+      .recon-mtd-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+        border-radius: 9px;
+      }
+      .recon-mtd-label {
+        font-size: 10.5px;
+      }
+      .recon-mtd-val {
+        font-size: 14.5px;
+      }
+      .recon-section-heading {
+        flex-wrap: wrap;
+        font-size: 13.5px;
+        gap: 4px;
+      }
+      .recon-section-heading small {
+        display: block;
+        width: 100%;
+        margin-left: 0 !important;
+        font-size: 11px !important;
+      }
+      .recon-kho-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .recon-kho-card {
+        padding: 12px;
+        gap: 12px;
+      }
+      .recon-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .recon-tab-group {
+        display: flex;
+        width: 100%;
+        overflow-x: auto;
+      }
+      .recon-tab-btn {
+        flex: 1;
+        padding: 0 8px;
+        font-size: 11.5px;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .recon-filter-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+      }
+      .recon-pill-select {
+        width: 100%;
+        font-size: 11.5px;
+      }
+      .recon-pill-search {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+      .recon-btn-excel {
+        grid-column: 1 / -1;
         width: 100%;
         justify-content: center;
       }
-      .neo-toggle-btn {
+      .table-recon-modern {
+        min-width: 680px;
+      }
+
+      /* 8. Modal Chi tiết đối chiếu theo ngày & Modal xác nhận lưu trên Mobile */
+      .rd-modal-overlay {
+        padding: 10px;
+      }
+      .rd-modal-card {
+        max-height: 90vh;
+        max-height: 90dvh;
+        border-radius: 18px;
+      }
+      .rd-modal-header {
+        position: relative;
+        padding: 14px 14px 10px 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .rd-header-left {
+        padding-right: 34px;
+        gap: 10px;
+      }
+      .rd-warehouse-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        border-radius: 10px;
+      }
+      .rd-header-title {
+        font-size: 15.5px;
+      }
+      .rd-header-sub {
+        font-size: 11px;
+        line-height: 1.3;
+      }
+      .rd-close-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 30px;
+        height: 30px;
+      }
+      .rd-header-right {
+        width: 100%;
+      }
+      .rd-month-pill {
+        width: 100%;
+        justify-content: space-between;
+        height: 34px;
+      }
+      .rd-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 0 14px 10px 14px;
+      }
+      .rd-kpi-box {
+        padding: 8px 10px;
+        gap: 8px;
+        border-radius: 10px;
+      }
+      .rd-kpi-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+        border-radius: 8px;
+      }
+      .rd-kpi-label {
+        font-size: 10.5px;
+      }
+      .rd-kpi-val {
+        font-size: 14.5px;
+      }
+      .rd-body-section {
+        padding: 0 14px;
         flex: 1;
-        min-width: 45%;
-        font-size: 11.5px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .rd-table-wrap {
+        max-height: 40vh;
+        max-height: 40dvh;
+        overflow-x: auto;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .table-rd-daily {
+        min-width: 520px;
+        font-size: 12px;
+      }
+      .table-rd-daily thead th,
+      .table-rd-daily tbody td,
+      .table-rd-daily tfoot td {
+        padding: 8px 8px;
+        white-space: nowrap;
+      }
+      .rd-qty-input {
+        width: 102px;
+        height: 30px;
+        font-size: 12.5px;
         padding: 0 8px;
       }
-      .app-card {
-        padding: 12px;
+      .rd-modal-footer {
+        padding: 12px 14px 14px 14px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
       }
-      
-      /* 6. Cho phép vuốt ngang các Bảng dữ liệu dài */
-      .table-wrap, .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch; /* Tạo độ mượt khi vuốt trên iPhone/Android */
+      .rd-footer-group {
+        width: 100%;
+        display: flex;
+        gap: 8px;
       }
-      
-      /* 7. Thu nhỏ hình minh họa trong Modal thành công */
+      .rd-footer-group button {
+        flex: 1;
+        justify-content: center;
+        height: 36px;
+        font-size: 12px;
+        padding: 0 10px;
+      }
       .tx-success-card {
-        padding: 20px 16px;
-      }
-      .modal-illustration {
-        width: 110px;
-        height: 90px;
+        padding: 18px 14px;
       }
       .tx-success-title {
-        font-size: 18px;
+        font-size: 17px;
+      }
+      .btn-sub-row {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .btn-sub {
+        flex: 1 1 45%;
+        font-size: 12px;
       }
     }
 
-    /* ===== MÀN HÌNH ĐIỆN THOẠI RẤT NHỎ (VD: iPhone SE, các máy Android nhỏ) ===== */
+    /* ===== MÀN HÌNH ĐIỆN THOẠI NHỎ (<= 480px) ===== */
     @media (max-width: 480px) {
-      .kpi-grid {
-        grid-template-columns: 1fr; /* Stack dọc các thẻ KPI thành 1 cột */
+      .ios-search-bar > div[style*="width: 1px"] {
+        display: none;
       }
-      .recon-grid {
+      .ios-time-tabs {
+        width: 100%;
+        border-bottom: 1px solid rgba(203, 213, 225, 0.5);
+        padding-bottom: 4px;
+      }
+      .ios-date-input {
+        max-width: none;
+        flex: 1;
+        text-align: right;
+      }
+    }
+
+    /* ===== MÀN HÌNH SIÊU NHỎ (< 350px) ===== */
+    @media (max-width: 350px) {
+      .kpi-grid,
+      .recon-mtd-top-grid,
+      .rd-kpi-grid {
         grid-template-columns: 1fr;
-      }
-      .ios-tab {
-        padding: 6px 8px;
-        font-size: 10.5px;
       }
     }
     /* ===== CSS CHO BẢNG CHI TIẾT BIẾN ĐỘNG TỒN KHO ===== */
@@ -7362,14 +7763,15 @@ const DON_GIA_BANH_MAC_DINH = 4100;
 
         return `
           <tr style="cursor: pointer;"
+              onclick="if(window.innerWidth <= 768) openReconDetailModal('${r.kho}')"
               ondblclick="openReconDetailModal('${r.kho}')"
-              title="Nhấp đúp vào dòng kho ${r.kho} để mở cửa sổ chi tiết đối chiếu theo từng ngày">
+              title="Nhấp đúp (hoặc chạm trên điện thoại) vào dòng kho ${r.kho} để mở cửa sổ chi tiết đối chiếu theo từng ngày">
             <td class="text-muted fw-semibold">${index + 1}</td>
             <td class="text-start fw-bold">
               <span class="kho-dot" style="background: ${r.dotColor};"></span>${r.kho}
             </td>
             <td class="fw-semibold">${r.slXuat.toLocaleString('vi-VN')}</td>
-            <td ondblclick="event.stopPropagation()">
+            <td onclick="event.stopPropagation()" ondblclick="event.stopPropagation()">
               <input type="number"
                      class="recon-inline-qty-input"
                      value="${r.slHoaDon}"
@@ -7555,6 +7957,9 @@ const DON_GIA_BANH_MAC_DINH = 4100;
       if (selectEl) {
         selectEl.value = kho;
         renderReconView();
+      }
+      if (window.innerWidth <= 768 && typeof openReconDetailModal === 'function') {
+        openReconDetailModal(kho);
       }
     }
 
