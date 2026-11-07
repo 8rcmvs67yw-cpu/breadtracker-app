@@ -6,11 +6,101 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- MÃ MỚI: Thư viện JsBarcode tạo mã vạch chuẩn để súng POS thu ngân quét được -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-
   <style>
+    /* ===== BẢNG CHI TIẾT XUẤT KHO 30 NGÀY ===== */
+    .table-xuat-kho-thang {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: max-content;
+    }
+    .table-xuat-kho-thang th, .table-xuat-kho-thang td {
+      padding: 8px 6px;
+      font-size: 11.5px;
+      text-align: center;
+      border-bottom: 1px solid #F1F5F9;
+      vertical-align: middle;
+    }
+    .table-xuat-kho-thang th {
+      background: #F8FAFC;
+      color: #475569;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 2px solid #E2E8F0;
+      white-space: nowrap;
+    }
+    .table-xuat-kho-thang td {
+      color: #1E293B;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+    .table-xuat-kho-thang td.empty-cell {
+      color: #94A3B8;
+    }
+    
+    /* Freeze cột đầu tiên (Kho/Đơn vị) */
+    .table-xuat-kho-thang th:first-child, 
+    .table-xuat-kho-thang td:first-child {
+      position: sticky;
+      left: 0;
+      text-align: left;
+      z-index: 11;
+      box-shadow: 2px 0 5px rgba(15, 23, 42, 0.04);
+      background: #ffffff;
+      font-weight: 700;
+      padding-left: 12px;
+      white-space: nowrap;
+    }
+    .table-xuat-kho-thang th:first-child {
+      background: #F8FAFC;
+      z-index: 12;
+    }
+    
+    /* Highlight cột ngày hôm nay */
+    .table-xuat-kho-thang .col-today {
+      background-color: #ECFDF5 !important;
+      font-weight: 700;
+    }
+    .table-xuat-kho-thang th.col-today {
+      background-color: #D1FAE5 !important;
+      color: #065F46;
+      border-bottom-color: #34D399;
+    }
+    
+    /* Freeze Cột Tổng cộng bên phải */
+    .table-xuat-kho-thang th:last-child, 
+    .table-xuat-kho-thang td:last-child {
+      font-weight: 800;
+      background: #F8FAFC;
+      position: sticky;
+      right: 0;
+      box-shadow: -2px 0 5px rgba(15, 23, 42, 0.04);
+      z-index: 11;
+    }
+    
+    /* Footer (Tổng ngày) */
+    .table-xuat-kho-thang tfoot td {
+      position: sticky;
+      bottom: -1px;
+      background: #F0FDF4;
+      font-weight: 800;
+      border-top: 2px solid #BBF7D0;
+      z-index: 12;
+      color: #065F46;
+    }
+    .table-xuat-kho-thang tfoot td:first-child {
+      background: #DCFCE7;
+      z-index: 13;
+    }
+    .table-xuat-kho-thang tfoot td:last-child {
+      z-index: 13;
+      background: #D1FAE5;
+    }
     /* ===== TÙY CHỈNH THANH CUỘN (SCROLLBAR) TOÀN TRANG ===== */
     /* 1. Dành cho các trình duyệt Chrome, Safari, Edge */
     ::-webkit-scrollbar {
@@ -1153,6 +1243,640 @@
     .status-khop { background-color: #E6F4EA; color: #137333; }
     .status-lech { background-color: #FCE8E6; color: #C5221F; }
 
+    /* ===== BẢNG ĐỐI CHIẾU CÔNG NỢ HỢP NHẤT (NEW UI/UX) ===== */
+    .recon-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .recon-tab-group {
+      display: inline-flex;
+      align-items: center;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .recon-tab-btn {
+      height: 36px;
+      padding: 0 16px;
+      border: none;
+      border-right: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      color: #334155;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .recon-tab-btn:last-child {
+      border-right: none;
+    }
+
+    .recon-tab-btn:hover:not(.active) {
+      background: #F1F5F9;
+      color: #0F172A;
+    }
+
+    .recon-tab-btn.active {
+      background: #15803D;
+      color: #FFFFFF;
+    }
+
+    .recon-filter-bar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .recon-pill-select {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.18s ease;
+    }
+
+    .recon-pill-select:focus {
+      border-color: #15803D;
+    }
+
+    .recon-pill-search {
+      position: relative;
+      width: 220px;
+    }
+
+    .recon-pill-search i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94A3B8;
+      font-size: 12px;
+    }
+
+    .recon-pill-search input {
+      width: 100%;
+      height: 36px;
+      padding: 0 12px 0 32px;
+      border-radius: 999px;
+      border: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      font-size: 12px;
+      color: #0F172A;
+      outline: none;
+      transition: border-color 0.18s ease;
+    }
+
+    .recon-pill-search input:focus {
+      border-color: #15803D;
+    }
+
+    .recon-btn-excel {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      color: #1E293B;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .recon-btn-excel:hover {
+      background: #F0FDF4;
+      border-color: #BBF7D0;
+      color: #15803D;
+    }
+
+    .recon-table-container {
+      overflow-x: auto;
+      border-radius: 12px;
+    }
+
+    .table-recon-modern {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+    }
+
+    .table-recon-modern thead th {
+      background: #F8FAFC;
+      color: #334155;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 10px 12px;
+      border-top: 1px solid #E2E8F0;
+      border-bottom: 1px solid #E2E8F0;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+
+    .table-recon-modern thead th:first-child {
+      border-left: 1px solid #E2E8F0;
+      border-radius: 10px 0 0 10px;
+    }
+
+    .table-recon-modern thead th:last-child {
+      border-right: 1px solid #E2E8F0;
+      border-radius: 0 10px 10px 0;
+    }
+
+    .table-recon-modern thead .th-sub {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .table-recon-modern thead .th-sub.green { color: #15803D; }
+    .table-recon-modern thead .th-sub.blue { color: #0369A1; }
+    .table-recon-modern thead .th-sub.muted { color: #64748B; }
+
+    .table-recon-modern tbody td {
+      padding: 11px 12px;
+      border-bottom: 1px solid #F1F5F9;
+      vertical-align: middle;
+      color: #0F172A;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .table-recon-modern tbody tr:hover td {
+      background: #F8FAFC;
+    }
+
+    .recon-inline-qty-input {
+      width: 86px;
+      height: 28px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 13px;
+      color: #0F172A;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      background: transparent;
+      font-variant-numeric: tabular-nums;
+      transition: all 0.15s ease;
+    }
+
+    .recon-inline-qty-input:hover,
+    .recon-inline-qty-input:focus {
+      border-color: #93C5FD;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      outline: none;
+    }
+
+    .recon-status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      min-width: 84px;
+    }
+
+    .recon-status-pill.khop {
+      background: #DCFCE7;
+      color: #15803D;
+    }
+
+    .recon-status-pill.lech {
+      background: #FEF3C7;
+      color: #B45309;
+    }
+
+    .table-recon-modern tfoot td {
+      background: #E6F4EA;
+      padding: 12px 12px;
+      font-weight: 800;
+      font-size: 13.5px;
+      color: #0F172A;
+      border-top: 1px solid #BBF7D0;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .table-recon-modern tfoot td:first-child {
+      border-radius: 10px 0 0 10px;
+    }
+
+    .table-recon-modern tfoot td:last-child {
+      border-radius: 0 10px 10px 0;
+    }
+
+    /* ===== MODAL CHI TIẾT ĐỐI CHIẾU THEO NGÀY (APPLE PREMIUM UI) ===== */
+    .rd-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9995;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    .rd-modal-overlay.show {
+      display: flex;
+    }
+
+    .rd-modal-card {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 920px;
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2), 0 0 0 1px rgba(226, 232, 240, 0.8);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: popInModal 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .rd-modal-header {
+      padding: 20px 24px 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .rd-header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .rd-warehouse-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #DCFCE7;
+      color: #15803D;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .rd-header-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0 0 3px 0;
+      letter-spacing: -0.3px;
+    }
+
+    .rd-header-sub {
+      font-size: 12.5px;
+      color: #64748B;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    .rd-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rd-month-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 12px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #1E293B;
+    }
+
+    .rd-month-pill input[type="month"] {
+      border: none;
+      background: transparent;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #0F172A;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .rd-close-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: none;
+      background: #F1F5F9;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .rd-close-btn:hover {
+      background: #E2E8F0;
+      color: #0F172A;
+    }
+
+    .rd-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 0 24px 16px 24px;
+    }
+
+    .rd-kpi-box {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
+    }
+
+    .rd-kpi-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+    .rd-kpi-icon.green { background: #ECFDF5; color: #16A34A; }
+    .rd-kpi-icon.amber { background: #FFFBEB; color: #D97706; }
+
+    .rd-kpi-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .rd-kpi-label {
+      font-size: 11.5px;
+      color: #64748B;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .rd-kpi-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0F172A;
+      line-height: 1.15;
+      margin: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rd-body-section {
+      padding: 0 24px;
+    }
+
+    .rd-table-wrap {
+      max-height: 360px;
+      overflow-y: auto;
+      border: 1px solid #F1F5F9;
+      border-radius: 14px;
+    }
+
+    .table-rd-daily {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+    }
+
+    .table-rd-daily thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #F8FAFC;
+      color: #334155;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #E2E8F0;
+      line-height: 1.3;
+    }
+
+    .table-rd-daily thead .th-sub {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .table-rd-daily thead .th-sub.green { color: #15803D; }
+    .table-rd-daily thead .th-sub.blue { color: #0369A1; }
+    .table-rd-daily thead .th-sub.muted { color: #64748B; }
+
+    .table-rd-daily tbody td {
+      padding: 9px 12px;
+      border-bottom: 1px solid #F1F5F9;
+      vertical-align: middle;
+      color: #0F172A;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .table-rd-daily tbody tr:hover td {
+      background: #F8FAFC;
+    }
+
+    .rd-qty-input {
+      width: 135px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      font-size: 13px;
+      font-weight: 700;
+      color: #0F172A;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+      transition: all 0.15s ease;
+    }
+    .rd-qty-input::placeholder {
+      color: #94A3B8;
+      font-weight: 400;
+      font-size: 12px;
+    }
+    .rd-qty-input:focus {
+      outline: none;
+      border-color: #2563EB;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .rd-qty-input.input-diff {
+      border-color: #EF4444;
+      background: #FFF5F5;
+      color: #B91C1C;
+    }
+
+    .rd-status-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      min-width: 96px;
+    }
+    .rd-status-badge.khop {
+      background: #DCFCE7;
+      color: #15803D;
+    }
+    .rd-status-badge.lech {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+    .rd-status-badge.pending {
+      background: #F1F5F9;
+      color: #475569;
+    }
+
+    .table-rd-daily tfoot td {
+      position: sticky;
+      bottom: -1px;
+      z-index: 10;
+      background: #E6F4EA;
+      padding: 11px 12px;
+      font-weight: 800;
+      font-size: 13.5px;
+      color: #0F172A;
+      border-top: 1px solid #BBF7D0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rd-history-drawer {
+      margin-top: 12px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+    }
+    .rd-history-drawer.show {
+      display: block;
+    }
+
+    .rd-modal-footer {
+      padding: 16px 24px 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .rd-footer-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rd-btn-light {
+      height: 38px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      color: #1E293B;
+      font-size: 12.5px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .rd-btn-light:hover {
+      background: #F1F5F9;
+      border-color: #CBD5E1;
+    }
+
+    .rd-btn-cancel {
+      height: 38px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: 1px solid #E2E8F0;
+      background: #F8FAFC;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .rd-btn-cancel:hover {
+      background: #E2E8F0;
+      color: #0F172A;
+    }
+
+    .rd-btn-save {
+      height: 38px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: none;
+      background: #15803D;
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);
+      transition: all 0.18s ease;
+    }
+    .rd-btn-save:hover {
+      background: #166534;
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+      .rd-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .rd-modal-header {
+        flex-direction: column;
+      }
+    }
+
     .progress-bar-container {
       display: flex;
       align-items: center;
@@ -1169,41 +1893,293 @@
 
     .progress-tiny-inner { height: 100%; border-radius: 3px; }
 
-    /* ===== THẺ TỔNG HỢP ĐỐI CHIẾU CÔNG NỢ THU GỌN ===== */
-    .recon-grid {
+    /* ===== BỘ KPI ĐỐI CHIẾU CÔNG NỢ MTD & THEO KHO/ĐƠN VỊ ===== */
+    .recon-mtd-top-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 14px;
+      gap: 14px;
+      margin-bottom: 18px;
     }
 
-    .recon-tile {
-      background: #fff;
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 10px 12px;
-      text-align: center;
+    .recon-mtd-banner {
+      position: relative;
+      overflow: hidden;
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 78px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .recon-mtd-banner:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+    }
+
+    .recon-mtd-banner::after {
+      content: '';
+      position: absolute;
+      right: -20px;
+      bottom: -25px;
+      width: 110px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      pointer-events: none;
+    }
+
+    .recon-mtd-banner.theme-green-light {
+      background: linear-gradient(135deg, #68B984 0%, #3D8B5E 100%);
+      border-color: #3D8B5E;
+      color: #FFFFFF;
+    }
+
+    .recon-mtd-banner.theme-white {
+      background: linear-gradient(135deg, #FFFFFF 0%, #F4F9F5 100%);
+      border-color: #E2E8F0;
+      color: #0F172A;
+    }
+
+    .recon-mtd-banner.theme-green-dark {
+      background: linear-gradient(135deg, #35684D 0%, #1F4632 100%);
+      border-color: #1F4632;
+      color: #FFFFFF;
+    }
+
+    .recon-mtd-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .theme-green-light .recon-mtd-icon,
+    .theme-green-dark .recon-mtd-icon {
+      background: rgba(255, 255, 255, 0.18);
+      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .theme-white .recon-mtd-icon {
+      background: #E8F3EC;
+      color: #2A6B49;
+      border: 1px solid #CBE4D4;
+    }
+
+    .recon-mtd-info {
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      min-height: 68px;
+      z-index: 1;
+    }
+
+    .recon-mtd-label {
+      font-size: 12px;
+      font-weight: 500;
+      opacity: 0.92;
+      margin-bottom: 2px;
+    }
+
+    .theme-white .recon-mtd-label {
+      color: #475569;
+    }
+
+    .recon-mtd-val {
+      font-size: 21px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin: 0;
+      letter-spacing: -0.3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .recon-section-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 4px 0 12px 0;
+    }
+
+    .recon-kho-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .recon-kho-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8);
       transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
     }
 
-    .recon-tile:hover {
+    .recon-kho-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 5px 12px rgba(15, 23, 42, 0.07);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.07);
     }
 
-    .recon-tile:active {
-      transform: translateY(0) scale(0.98);
+    .recon-kho-card.active-kho {
+      border-color: #10B981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
     }
 
-    .recon-tile-label { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 3px; }
-    .recon-tile-val { font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0; line-height: 1.2; }
-    .recon-tile-val small { font-size: 11.5px; font-weight: 500; }
+    .recon-kho-left {
+      width: 98px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .recon-kho-title-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .recon-kho-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .recon-kho-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0F172A;
+      white-space: nowrap;
+    }
+
+    .recon-ring-box {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .recon-ring-svg {
+      width: 58px;
+      height: 58px;
+      transform: rotate(-90deg);
+    }
+
+    .recon-ring-bg {
+      fill: none;
+      stroke: #E2E8F0;
+      stroke-width: 5.5;
+    }
+
+    .recon-ring-meter {
+      fill: none;
+      stroke-width: 5.5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.35s ease;
+    }
+
+    .recon-ring-text {
+      position: absolute;
+      font-size: 11px;
+      font-weight: 800;
+      color: #0F172A;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .recon-kho-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .recon-metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    .recon-metric-row.editable-paid:hover {
+      background: #F1F5F9;
+    }
+
+    .recon-metric-label {
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+
+    .recon-metric-label i {
+      width: 14px;
+      text-align: center;
+      color: #64748B;
+      font-size: 11px;
+    }
+
+    .recon-metric-val {
+      font-weight: 700;
+      color: #0F172A;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .recon-metric-row.debt-remain {
+      background: #FFF1F2;
+      padding: 4px 8px;
+      margin-top: 2px;
+    }
+
+    .recon-metric-row.debt-remain .recon-metric-label {
+      color: #9F1239;
+      font-weight: 600;
+    }
+
+    .recon-metric-row.debt-remain .recon-metric-label i {
+      color: #E11D48;
+    }
+
+    .recon-metric-row.debt-remain .recon-metric-val {
+      color: #E11D48;
+      font-weight: 800;
+    }
+
+    @media (max-width: 992px) {
+      .recon-mtd-top-grid { grid-template-columns: repeat(2, 1fr); }
+      .recon-kho-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 576px) {
+      .recon-mtd-top-grid { grid-template-columns: 1fr; }
+      .recon-kho-grid { grid-template-columns: 1fr; }
+    } 
 
     /* Form control kiểu thu gọn */
     .form-label-compact {
@@ -2417,6 +3393,91 @@
         font-size: 10.5px;
       }
     }
+    /* ===== CSS CHO BẢNG CHI TIẾT BIẾN ĐỘNG TỒN KHO ===== */
+    .pill-var {
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+      padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700; min-width: 65px;
+    }
+    .pill-var.down { background: #FEE2E2; color: #DC2626; } /* Đỏ - Giảm */
+    .pill-var.up { background: #DCFCE7; color: #16A34A; } /* Xanh - Tăng */
+    .pill-var.zero { background: #F1F5F9; color: #64748B; } /* Xám - Không đổi */
+
+    .pill-status {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+      border-radius: 20px; font-size: 11.5px; font-weight: 600; 
+      border: 1px solid transparent; min-width: 95px; justify-content: flex-start;
+    }
+    .pill-status.down { background: #FEF2F2; color: #DC2626; border-color: #FEE2E2; }
+    .pill-status.up { background: #F0FDF4; color: #16A34A; border-color: #DCFCE7; }
+    .pill-status.zero { background: #F8FAFC; color: #64748B; border-color: #F1F5F9; }
+    
+    .table-dash th i.fa-info-circle { color: #94A3B8; margin-left: 4px; font-size: 10.5px; }
+/* ===== CSS APPLE UI CHO 2 BẢNG CHI TIẾT ===== */
+    .apple-table-wrap {
+      max-height: 355px; /* Chiều cao vừa khít phần tiêu đề, 7 dòng dữ liệu và phần tổng cộng */
+      overflow-y: auto;  
+      border-radius: 0 0 14px 14px;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+      background: #ffffff;
+    }
+    
+    .apple-table-wrap::-webkit-scrollbar { width: 5px; }
+    .apple-table-wrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .apple-table-wrap::-webkit-scrollbar-track { background: transparent; }
+
+    .table-apple {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 12.5px;
+    }
+    
+    /* Cố định tiêu đề ở trên cùng */
+    .table-apple thead th {
+      position: sticky;
+      top: 0;
+      background: rgba(248, 250, 252, 0.98); /* Làm nền đặc hơn để chữ cuộn bên dưới không bị lẫn */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 10;
+      padding: 14px 10px;
+      color: #475569;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 10.5px;
+      letter-spacing: 0.3px;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    
+    .table-apple tbody td {
+      padding: 12px 10px;
+      vertical-align: middle;
+      border-bottom: 1px solid #F1F5F9;
+      color: #1E293B;
+      transition: background 0.2s ease;
+    }
+    
+    .table-apple tbody tr:hover td {
+      background-color: #F8FAFC;
+    }
+    
+    .table-apple tbody tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* Cố định phần tổng cộng ở dưới cùng */
+    .table-apple tfoot td {
+      position: sticky;
+      bottom: -1px; /* Đặt âm một pixel để lấp kín viền trắng dưới đáy khi cuộn chuột */
+      background: rgba(240, 253, 244, 0.98); /* Làm nền đặc hơn */
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 10;
+      padding: 8px 10px; /* Thu nhỏ khoảng cách trên dưới từ 14 pixel xuống 8 pixel */
+      border-top: 1px solid #BBF7D0;
+      box-shadow: 0 -4px 15px rgba(0,0,0, 0.03);
+    }
   </style>
 </head>
 <body>
@@ -2550,13 +3611,13 @@
   margin-top: 2px;
   white-space: nowrap;
 }
-    .ios-spinner-overlay {
+   .ios-spinner-overlay {
       position: fixed; inset: 0; background: rgba(255, 255, 255, 0.85);
       backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
       z-index: 9999; display: none; align-items: center; justify-content: center;
-      flex-direction: column; gap: 12px; opacity: 0; transition: opacity 0.3s ease;
+      flex-direction: column; gap: 12px;
     }
-    .ios-spinner-overlay.show { display: flex; opacity: 1; }
+    .ios-spinner-overlay.show { display: flex; }
     
     .ios-spinner-circle {
       width: 42px; height: 42px;
@@ -2876,13 +3937,14 @@
           </div>
         </div>
 
-<!-- HÀNG 2: BIỂU ĐỒ NGÀY & CƠ CẤU HÀNG TỒN KHO THEO HẠN SỬ DỤNG -->
-        <div class="row g-3 mb-3">
-          <div class="col-lg-7">
-            <div class="dash-card">
+        <!-- HÀNG 2.1: CÁC BIỂU ĐỒ TỔNG QUAN -->
+        <div class="row g-3 mb-3 d-flex align-items-stretch">
+          <div class="col-lg-7 d-flex">
+            <!-- BIỂU ĐỒ CHÍNH -->
+            <div class="dash-card w-100" style="height: auto;">
               <div class="dash-card-header">
                 <h2 class="dash-card-title">Biểu đồ nhập - xuất - tồn</h2>
-<select id="chartViewType" class="input-compact" style="display:none;" onchange="updateChartView()">
+                <select id="chartViewType" class="input-compact" style="display:none;" onchange="updateChartView()">
                   <option value="day">Theo ngày</option>
                   <option value="week">Theo tuần</option>
                   <option value="month">Theo tháng</option>
@@ -2894,8 +3956,9 @@
             </div>
           </div>
 
-          <div class="col-lg-5">
-            <div class="dash-card">
+          <div class="col-lg-5 d-flex">
+            <!-- BIỂU ĐỒ DOUGHNUT HSD -->
+            <div class="dash-card w-100" style="height: auto;">
               <div class="hsd-card-header">
                 <div class="hsd-card-icon">
                   <i class="fas fa-chart-pie"></i>
@@ -2931,7 +3994,84 @@
           </div>
         </div>
 
-       <!-- HÀNG 3: BIỂU ĐỒ CỘT CHỒNG - LƯỢNG MUA (XUẤT KHO) CỦA CÁC KHO -->
+<!-- HÀNG 2.2: CÁC BẢNG CHI TIẾT SỐ LIỆU (UI APPLE - 15 DÒNG) -->
+        <div class="row g-3 mb-3 d-flex align-items-stretch">
+          
+          <!-- CỘT TRÁI: CHI TIẾT THEO THỜI GIAN -->
+          <div class="col-lg-7 d-flex">
+            <div class="dash-card w-100 d-flex flex-column" style="height: auto; padding: 0; overflow: hidden;">
+              <div class="card-apple-header" style="padding: 16px; border-bottom: 1px solid #E2E8F0; background: #ffffff;">
+                <h2 class="dash-card-title"><i class="far fa-calendar-alt text-primary me-2"></i>Chi tiết theo Thời gian</h2>
+              </div>
+              <div class="apple-table-wrap flex-grow-1">
+                <table class="table-apple text-center">
+                 <thead>
+                    <tr>
+                      <th class="text-start" style="padding-left: 16px; white-space: nowrap;">Thời gian</th>
+                      <th class="text-end" style="white-space: nowrap;">Đầu kỳ</th>
+                      <th class="text-end" style="color: #10B981; white-space: nowrap;">Nhập</th>
+                      <th class="text-end" style="color: #E60012; white-space: nowrap;">Xuất</th>
+                      <th class="text-end" style="white-space: nowrap;">Cuối kỳ</th>
+                      <th class="text-center" style="white-space: nowrap;">Biến động (SL/%)</th>
+                      <th class="text-center" style="white-space: nowrap; padding-right: 16px;">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyChartDetail">
+                    <!-- Javascript sẽ render các dòng dữ liệu vào đây -->
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td class="text-start fw-bold" style="padding-left: 16px; font-size: 12.5px; color: #0F172A; text-transform: uppercase;">Tổng</td>
+                      <td class="text-end fw-bold" style="color: #94A3B8; font-size: 12.5px;">&mdash;</td>
+                      <td class="text-end fw-bold" id="tfTotalNhap" style="font-size: 13.5px; color: #10B981;">0</td>
+                      <td class="text-end fw-bold" id="tfTotalXuat" style="font-size: 13.5px; color: #E60012;">0</td>
+                      <td class="text-end fw-bold" style="color: #94A3B8; font-size: 12.5px;">&mdash;</td>
+                      <td class="text-center fw-bold" id="tfTotalBienDong"></td>
+                      <td style="padding-right: 16px;"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- CỘT PHẢI: CHI TIẾT TỒN KHO THEO DATE HSD -->
+          <div class="col-lg-5 d-flex">
+            <div class="dash-card w-100 d-flex flex-column" style="height: auto; padding: 0; overflow: hidden;">
+              <div class="card-apple-header" style="padding: 16px; border-bottom: 1px solid #E2E8F0; background: #ffffff;">
+                <h2 class="dash-card-title"><i class="fas fa-boxes text-success me-2"></i>Chi tiết tồn kho theo Date HSD</h2>
+              </div>
+              <div class="apple-table-wrap flex-grow-1">
+                <table class="table-apple text-center">
+                  <thead>
+                    <tr>
+                      <th class="text-start" style="padding-left: 16px;">Ngày nhập</th>
+                      <th>HSD (Date)</th>
+                      <th class="text-end">SL nhập</th>
+                      <th class="text-end">Đã xuất</th>
+                      <th class="text-end">Tồn</th>
+                      <th class="text-end" style="padding-right: 16px;">Nhóm HSD</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyHsdDetailTable">
+                    <!-- Javascript sẽ render chi tiết các lô vào đây -->
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="2" class="text-start fw-bold" style="padding-left: 16px; font-size: 12.5px; color: #0F172A; text-transform: uppercase;">Tổng</td>
+                      <td class="text-end fw-bold" id="tfHsdTotalNhap" style="font-size: 13.5px; color: #0F172A;">0</td>
+                      <td class="text-end fw-bold" id="tfHsdTotalXuat" style="font-size: 13.5px; color: #E60012;">0</td>
+                      <td class="text-end fw-bold" id="tfHsdTotalTon" style="font-size: 13.5px; color: #10B981;">0</td>
+                      <td style="padding-right: 16px;"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- HÀNG 3: BIỂU ĐỒ CỘT CHỒNG - LƯỢNG MUA (XUẤT KHO) CỦA CÁC KHO -->
         <div class="row g-3 mb-3">
           <div class="col-12">
             <div class="dash-card">
@@ -2944,108 +4084,29 @@
             </div>
           </div>
         </div>
-
-        <!-- HÀNG 4: BẢNG TỒN KHO THEO KHO & CẢNH BÁO HẠN SỬ DỤNG -->
+<!-- HÀNG 4: BẢNG CHI TIẾT XUẤT KHO 30 NGÀY -->
         <div class="row g-3 mb-4">
-          <!-- Bảng trái: Tồn kho theo kho -->
-          <div class="col-lg-7">
+          <div class="col-12">
             <div class="dash-card">
-              
               <div class="card-header-modern">
-                <div class="card-header-icon-box">
-                  <i class="fas fa-boxes"></i>
+                <div class="card-header-icon-box" style="background: #ECFDF5; color: #10B981; border-color: #D1FAE5;">
+                  <i class="fas fa-calendar-alt"></i>
                 </div>
                 <div class="card-header-text">
-                  <h2>Tồn kho theo kho</h2>
-                  <p>Tình trạng tồn kho hiện tại và biến động so với tháng trước</p>
+                  <h2 id="lblTitleXuatKho">Chi tiết xuất kho 30 ngày</h2>
+                  <p>Thống kê số lượng bánh xuất kho giao thực tế cho từng đơn vị theo từng ngày</p>
                 </div>
               </div>
-
-              <div class="table-responsive">
-                <table class="table-inventory">
-                  <thead>
-                    <tr>
-                      <th class="text-start">Kho</th>
-                      <th class="text-center">
-                        <div class="d-flex flex-column align-items-center">
-                          <span><i class="fas fa-boxes text-muted me-1"></i> Tồn kho hiện tại</span>
-                          <span style="font-size: 10.5px; font-weight: 400; color: #64748B;">(Cái)</span>
-                        </div>
-                      </th>
-                      <th class="text-center">
-                        <div class="d-flex flex-column align-items-center">
-                          <span><i class="fas fa-arrow-down text-muted me-1"></i> Nhập tháng</span>
-                          <span style="font-size: 10.5px; font-weight: 400; color: #64748B;">(Cái)</span>
-                        </div>
-                      </th>
-                      <th class="text-center">
-                        <div class="d-flex flex-column align-items-center">
-                          <span><i class="fas fa-arrow-up text-muted me-1"></i> Xuất tháng</span>
-                          <span style="font-size: 10.5px; font-weight: 400; color: #64748B;">(Cái)</span>
-                        </div>
-                      </th>
-                      <th class="text-center">
-                        <span><i class="fas fa-chart-bar text-muted me-1"></i> So với tháng trước</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbodyTonKhoKho">
-                    <!-- Javascript sẽ render vào đây -->
-                  </tbody>
-                  <tfoot id="tfootTonKhoKho">
-                    <!-- Javascript sẽ render vào đây -->
-                  </tfoot>
+              <div class="table-responsive" style="max-height: 450px;">
+                <table class="table-inventory table-xuat-kho-thang" id="tableXuatKhoThang">
+                  <thead id="theadXuatKhoThang"></thead>
+                  <tbody id="tbodyXuatKhoThang"></tbody>
+                  <tfoot id="tfootXuatKhoThang"></tfoot>
                 </table>
               </div>
-            </div>
-          </div>
-
-          <!-- Bảng phải: Cảnh báo hạn sử dụng -->
-          <div class="col-lg-5">
-            <div class="dash-card" id="cardCanhBaoHSD">
-              
-              <div class="card-header-modern" style="align-items: flex-start;">
-                <div class="card-header-icon-box" style="background: #FFFBEB; color: #D97706; border-color: #FEF3C7;">
-                  <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="card-header-text" style="flex: 1;">
-                  <h2>Cảnh báo hạn sử dụng</h2>
-                  <p>Các lô hàng sắp hết hạn (≤ 3 ngày)</p>
-                </div>
-                <a href="javascript:void(0)" style="font-size: 12px; font-weight: 600; color: #2563EB; text-decoration: none; margin-top: 2px;" onclick="switchMenu('transaction', document.querySelector('.nav-btn[data-tab=\'transaction\']'))">
-                  Xem chi tiết →
-                </a>
-              </div>
-
-              <div class="table-responsive">
-                <table class="table-fefo">
-                  <thead>
-                    <tr>
-                      <th class="text-start">Kho</th>
-                      <th class="text-center">Số lượng (Cái)</th>
-                      <th class="text-center"><i class="far fa-calendar-alt text-muted me-1"></i> Hạn sử dụng</th>
-                      <th class="text-center"><i class="far fa-clock text-muted me-1"></i> Còn (ngày)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbodyFefoAlerts">
-                    <!-- Javascript sẽ render vào đây -->
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- Hộp cảnh báo màu hồng dưới đáy bảng -->
-              <div class="alert-box-modern">
-                <div class="alert-icon-modern"><i class="fas fa-exclamation-triangle"></i></div>
-                <div>
-                  <div class="alert-title-modern">Có <span id="expiryBannerQty" style="color: #E11D48;">0</span> cái bánh mì sắp hết hạn (≤ 3 ngày).</div>
-                  <div class="alert-sub-modern">Vui lòng kiểm tra và ưu tiên xuất trước.</div>
-                </div>
-              </div>
-              
             </div>
           </div>
         </div>
-
       </section>
       <!-- ================= XUẤT - NHẬP - TỒN ================= -->
       <section id="pane-transaction" class="view-pane">
@@ -3307,81 +4368,136 @@
             </div>
           </div>
 
-          <!-- Tiles -->
-          <div class="recon-grid">
-            <div class="recon-tile" style="background: #EFF6FF; border-color: #BFDBFE;">
-              <span class="recon-tile-label">TỔNG XUẤT KHO</span>
-              <p class="recon-tile-val text-primary" id="reconSumXuat">0 <small>Cái</small></p>
+          <!-- HÀNG 1: 4 THẺ TỔNG HỢP CÔNG NỢ MTD -->
+          <div class="recon-mtd-top-grid">
+            <div class="recon-mtd-banner theme-green-light">
+              <div class="recon-mtd-icon">
+                <i class="fas fa-cube"></i>
+              </div>
+              <div class="recon-mtd-info">
+                <span class="recon-mtd-label">Tổng xuất MTD</span>
+                <p class="recon-mtd-val" id="reconMtdTotalQty">0 cái</p>
+              </div>
             </div>
-            <div class="recon-tile" style="background: #ECFDF5; border-color: #A7F3D0;">
-              <span class="recon-tile-label">TỔNG POS THU NGÂN</span>
-              <p class="recon-tile-val text-success" id="reconSumHD">0 <small>Cái</small></p>
+
+            <div class="recon-mtd-banner theme-white">
+              <div class="recon-mtd-icon">
+                <i class="fas fa-coins"></i>
+              </div>
+              <div class="recon-mtd-info">
+                <span class="recon-mtd-label">Tổng giá trị xuất</span>
+                <p class="recon-mtd-val" id="reconMtdTotalVal">0 đ</p>
+              </div>
             </div>
-            <div class="recon-tile" style="background: #FFFBEB; border-color: #FDE68A;">
-              <span class="recon-tile-label">CHÊNH LỆCH</span>
-              <p class="recon-tile-val text-warning" id="reconSumDiff">0 <small>Cái</small></p>
+
+            <div class="recon-mtd-banner theme-white">
+              <div class="recon-mtd-icon">
+                <i class="far fa-credit-card"></i>
+              </div>
+              <div class="recon-mtd-info">
+                <span class="recon-mtd-label">Hạn mức công nợ</span>
+                <p class="recon-mtd-val" id="reconMtdTotalPaid">0 đ</p>
+              </div>
             </div>
-            <div class="recon-tile" style="background: #FEE2E2; border-color: #FCA5A5;">
-              <span class="recon-tile-label">TRẠNG THÁI</span>
-              <p class="recon-tile-val text-danger" id="reconStatusText" style="font-size: 17px;">--</p>
+
+            <div class="recon-mtd-banner theme-green-dark">
+              <div class="recon-mtd-icon">
+                <i class="fas fa-wallet"></i>
+              </div>
+              <div class="recon-mtd-info">
+                <span class="recon-mtd-label">Công nợ còn lại</span>
+                <p class="recon-mtd-val" id="reconMtdTotalRemain">0 đ</p>
+              </div>
             </div>
+          </div>
+
+          <!-- HÀNG 2: 6 THẺ CÔNG NỢ THEO KHO/ĐƠN VỊ (MTD) -->
+          <div class="recon-section-heading">
+            <i class="fas fa-chart-bar" style="color: #15803D;"></i>
+            <span>Công nợ theo kho/đơn vị (MTD)</span>
+            <small class="text-muted fw-normal ms-2" style="font-size: 11.5px;">(Nhấp vào thẻ kho để xem chi tiết • Nhấp vào "Đã thanh toán" để cập nhật tiền thanh toán)</small>
+          </div>
+          <div class="recon-kho-grid" id="reconKhoCardsContainer">
+            <!-- Render tự động bằng JS -->
           </div>
         </div>
 
-        <div class="row g-3">
-          <div class="col-lg-7">
-            <div class="app-card mb-0">
-              <div class="section-header">
-                <h2 class="section-title">CHI TIẾT ĐỐI CHIẾU SẢN PHẨM THEO NGÀY</h2>
+        <!-- CARD BẢNG ĐỐI CHIẾU CÔNG NỢ HỢP NHẤT -->
+        <div class="app-card mb-0">
+          <div class="recon-toolbar">
+            <!-- 3 Tab chuyển đổi chế độ xem -->
+            <div class="recon-tab-group">
+              <button type="button" class="recon-tab-btn active" data-tab="detail" onclick="switchReconTab('detail', this)">Chi tiết đối chiếu</button>
+              <button type="button" class="recon-tab-btn" data-tab="summary" onclick="switchReconTab('summary', this)">Tổng hợp theo kho</button>
+              <button type="button" class="recon-tab-btn" data-tab="diff" onclick="switchReconTab('diff', this)">Chênh lệch cần xử lý</button>
+            </div>
+
+            <!-- Bộ lọc & Tìm kiếm & Xuất Excel -->
+            <div class="recon-filter-bar">
+              <select class="recon-pill-select" id="reconFilterKho" onchange="onReconFilterKhoChange(this.value)">
+                <option value="ALL">Tất cả kho</option>
+                <option value="VT1">VT1</option>
+                <option value="VT2">VT2</option>
+                <option value="Mỹ Tho">Mỹ Tho</option>
+                <option value="MTC">MTC</option>
+                <option value="Mold">Mold</option>
+                <option value="Bình Phước">Bình Phước</option>
+              </select>
+
+              <select class="recon-pill-select" id="reconFilterStatus" onchange="renderReconView()">
+                <option value="ALL">Tất cả trạng thái</option>
+                <option value="KHOP">Khớp</option>
+                <option value="LECH">Chênh lệch</option>
+              </select>
+
+              <div class="recon-pill-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="reconSearchInput" placeholder="Tìm số chứng từ, sản phẩm..." oninput="renderReconView()">
               </div>
-              <div class="table-wrap">
-                <table class="table-compact text-center">
-                  <thead>
-                    <tr>
-                      <th>Ngày giao</th>
-                      <th>Mã SP</th>
-                      <th class="text-start">Tên sản phẩm</th>
-                      <th>ĐVT</th>
-                      <th class="text-end">Xuất kho</th>
-                      <th class="text-end">Giá trị (VNĐ)</th>
-                      <th class="text-end" style="width: 110px;">POS Thu ngân</th>
-                      <th class="text-end">Chênh lệch</th>
-                      <th>Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbodyReconItems">
-                    <!-- render details dynamic -->
-                  </tbody>
-                  <tfoot id="tfootReconItems" style="position: sticky; bottom: 0; background: #F8FAFC; box-shadow: 0 -1px 0 #E2E8F0, 0 -2px 10px rgba(0,0,0,0.02); z-index: 5;">
-                    <!-- Javascript sẽ tự động điền dòng Tổng cộng vào đây -->
-                  </tfoot>
-                </table>
-              </div>
+
+              <button type="button" class="recon-btn-excel" onclick="exportReconTableToExcel()">
+                <i class="fas fa-download"></i> Xuất Excel
+              </button>
             </div>
           </div>
 
-          <div class="col-lg-5">
-            <div class="app-card mb-0">
-              <h2 class="section-title mb-3">LỊCH SỬ CHỐT ĐỐI SOÁT</h2>
-              <div class="table-wrap">
-                <table class="table-compact text-center">
-                  <thead>
-                    <tr>
-                      <th>Ngày chốt</th>
-                      <th>Ngày giao</th>
-                      <th>Kho</th>
-                      <th class="text-end">Xuất kho</th>
-                      <th class="text-end">POS</th>
-                      <th class="text-end">Lệch</th>
-                      <th>Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbodyReconHistory">
-                    <!-- render history dynamic -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          <div class="recon-table-container">
+            <table class="table-recon-modern text-center">
+              <thead>
+                <tr>
+                  <th style="width: 55px;">STT</th>
+                  <th class="text-start">Kho/Đơn vị</th>
+                  <th>
+                    Số lượng xuất kho
+                    <span class="th-sub green">(Taekwang)</span>
+                  </th>
+                  <th>
+                    Số lượng hóa đơn
+                    <span class="th-sub blue">(LOTTE)</span>
+                  </th>
+                  <th>
+                    Chênh lệch
+                    <span class="th-sub muted">(Taekwang – LOTTE)</span>
+                  </th>
+                  <th>
+                    Giá trị xuất
+                    <span class="th-sub green">(Taekwang)</span>
+                  </th>
+                  <th>
+                    Giá trị hóa đơn
+                    <span class="th-sub blue">(LOTTE)</span>
+                  </th>
+                  <th>Công nợ còn lại</th>
+                  <th>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyReconUnified">
+                <!-- Render tự động bằng JS -->
+              </tbody>
+              <tfoot id="tfootReconUnified">
+                <!-- Render dòng Tổng cộng và Tỷ lệ khớp bằng JS -->
+              </tfoot>
+            </table>
           </div>
         </div>
       </section>
@@ -3770,19 +4886,145 @@
     </div>
   </div>
 
+  <!-- ================= MODAL CHI TIẾT ĐỐI CHIẾU THEO NGÀY (APPLE PREMIUM) ================= -->
+  <div id="reconDetailModal" class="rd-modal-overlay no-print" onclick="if(event.target===this) closeReconDetailModal()">
+    <div class="rd-modal-card">
+      <!-- Header -->
+      <div class="rd-modal-header">
+        <div class="rd-header-left">
+          <div class="rd-warehouse-icon">
+            <i class="fas fa-warehouse"></i>
+          </div>
+          <div>
+            <h3 class="rd-header-title">Chi tiết đối chiếu – <span id="rdModalKhoTitle">VT1</span></h3>
+            <p class="rd-header-sub">Đối chiếu số lượng xuất kho Taekwang và số lượng hóa đơn LOTTE theo từng ngày</p>
+          </div>
+        </div>
+        <div class="rd-header-right">
+          <div class="rd-month-pill">
+            <i class="far fa-calendar-alt text-muted"></i>
+            <input type="month" id="rdModalMonthInput" onchange="onReconDetailMonthChange(this.value)">
+          </div>
+          <button type="button" class="rd-close-btn" onclick="closeReconDetailModal()" title="Đóng">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Thẻ KPI Tổng hợp trong Modal -->
+      <div class="rd-kpi-grid">
+        <div class="rd-kpi-box">
+          <div class="rd-kpi-icon green"><i class="fas fa-cube"></i></div>
+          <div class="rd-kpi-meta">
+            <span class="rd-kpi-label">Tổng xuất kho</span>
+            <p class="rd-kpi-val" id="rdKpiTotalXuat">0 cái</p>
+          </div>
+        </div>
+
+        <div class="rd-kpi-box">
+          <div class="rd-kpi-icon green"><i class="fas fa-file-invoice"></i></div>
+          <div class="rd-kpi-meta">
+            <span class="rd-kpi-label">Tổng hóa đơn</span>
+            <p class="rd-kpi-val" id="rdKpiTotalHoaDon">0 cái</p>
+          </div>
+        </div>
+
+        <div class="rd-kpi-box">
+          <div class="rd-kpi-icon green"><i class="far fa-check-circle"></i></div>
+          <div class="rd-kpi-meta">
+            <span class="rd-kpi-label">Khớp</span>
+            <p class="rd-kpi-val" id="rdKpiMatchRate" style="color: #15803D;">100,0%</p>
+          </div>
+        </div>
+
+        <div class="rd-kpi-box">
+          <div class="rd-kpi-icon amber"><i class="fas fa-balance-scale"></i></div>
+          <div class="rd-kpi-meta">
+            <span class="rd-kpi-label">Chênh lệch</span>
+            <p class="rd-kpi-val" id="rdKpiTotalDiff">0 cái</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng chi tiết từng ngày -->
+      <div class="rd-body-section">
+        <div class="rd-table-wrap">
+          <table class="table-rd-daily text-center">
+            <thead>
+              <tr>
+                <th style="width: 60px;">STT</th>
+                <th class="text-start" style="width: 140px;">Ngày</th>
+                <th class="text-end" style="width: 180px;">
+                  Số lượng xuất kho
+                  <span class="th-sub green">(Taekwang)</span>
+                </th>
+                <th style="width: 190px;">
+                  Số lượng hóa đơn
+                  <span class="th-sub blue">(LOTTE)</span>
+                </th>
+                <th class="text-end" style="width: 160px;">
+                  Chênh lệch
+                  <span class="th-sub muted">(Taekwang – LOTTE)</span>
+                </th>
+                <th style="width: 140px;">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyReconDetailDaily">
+              <!-- Render tự động bằng JS -->
+            </tbody>
+            <tfoot id="tfootReconDetailDaily">
+              <!-- Render dòng tổng cộng bằng JS -->
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Khung xem Lịch sử nhập -->
+        <div id="rdHistoryDrawer" class="rd-history-drawer">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong style="font-size: 12.5px; color: #0F172A;"><i class="fas fa-history text-success me-1"></i> Lịch sử lưu đối chiếu của kho <span id="rdHistKhoLabel"></span></strong>
+            <button type="button" class="btn btn-sm btn-link text-muted p-0 text-decoration-none" style="font-size: 11.5px;" onclick="toggleReconDetailHistory()">Ẩn lịch sử ✕</button>
+          </div>
+          <div id="rdHistoryContent"></div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="rd-modal-footer">
+        <div class="rd-footer-group">
+          <button type="button" class="rd-btn-light" onclick="exportReconDetailExcel()">
+            <i class="fas fa-download"></i> Xuất Excel
+          </button>
+          <button type="button" class="rd-btn-light" onclick="toggleReconDetailHistory()">
+            <i class="far fa-clock"></i> Lịch sử nhập
+          </button>
+        </div>
+        <div class="rd-footer-group">
+          <button type="button" class="rd-btn-cancel" onclick="closeReconDetailModal()">Hủy</button>
+          <button type="button" class="rd-btn-save" id="btnSaveReconDetail" onclick="saveReconDetailModal()">
+            <i class="fas fa-check"></i> Lưu đối chiếu
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- JS LOGIC HOẠT ĐỘNG HOÀN TOÀN -->
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyatUX9cZmZyEzLtRMSijBRHqD3ptGLnETXjr3s1sYriRjSGl5qgEKRqsHkygxVTMlF/exec";
 
-    function callApi(action, data, onSuccess) {
+   function callApi(action, data, onSuccess) {
       fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: action, data: data }) })
       .then(res => res.json()).then(onSuccess)
-      .catch(err => { alert("Lỗi mạng: " + err.message); document.getElementById('globalLoader').style.display = 'none'; });
+      .catch(err => { 
+        iosAlert("Lỗi mạng: " + err.message, "Lỗi kết nối"); 
+        document.getElementById('globalLoader').style.display = 'none'; 
+      });
     }
     let APP_STATE = null;
     let chartInstance = null;
     let doughnutChartInstance = null;
     let FEFO_FILTER_MODE = 'ALL';
+
 
 // ================= RENDER DASHBOARD (GIỐNG 100% UI MẪU) =================
     function renderDashboard(data, monthYear) {
@@ -3880,59 +5122,8 @@
       let totalNhapAll = 0;
       let totalXuatAll = 0;
 
-      // 3. Render Bảng "Tồn kho theo kho"
-      let htmlKhoRows = '';
-
-      khoOrder.forEach(kho => {
-        const slTon = (data.tonTheoKho && data.tonTheoKho[kho]) || 0;
-        const slNhap = nhapByKho[kho] || 0;
-        const slXuat = xuatByKho[kho] || 0;
-        totalNhapAll += slNhap;
-        totalXuatAll += slXuat;
-
-        const color = khoColors[kho] || '#64748B';
-        const trend = mockTrends[kho] || { text: '↑ 0%', color: '#10B981' };
-
-        let trendBadgeHtml = '';
-        if (trend.text.includes('↑')) {
-          trendBadgeHtml = `<span class="trend-badge trend-up">${trend.text}</span>`;
-        } else {
-          trendBadgeHtml = `<span class="trend-badge trend-down">${trend.text}</span>`;
-        }
-
-        htmlKhoRows += `
-          <tr>
-            <td class="text-start" style="color: #0F172A; font-weight: 600; font-size: 12.5px;">
-              <span class="kho-dot" style="background:${color}; width: 7px; height: 7px; margin-right: 8px; box-shadow: 0 0 0 2px #fff, 0 0 0 3px ${color}33;"></span>${kho}
-            </td>
-            <td class="text-center" style="font-weight: 700; font-size: 12.5px; color: #0F172A;">${slTon.toLocaleString('vi-VN')}</td>
-            <td class="text-center text-muted" style="font-weight: 400; font-size: 12.5px;">${slNhap.toLocaleString('vi-VN')}</td>
-            <td class="text-center text-muted" style="font-weight: 400; font-size: 12.5px;">${slXuat.toLocaleString('vi-VN')}</td>
-            <td class="text-center">${trendBadgeHtml}</td>
-          </tr>
-        `;
-      });
-
-      document.getElementById('tbodyTonKhoKho').innerHTML = htmlKhoRows;
-      
-      document.getElementById('tfootTonKhoKho').innerHTML = `
-        <tr class="tfoot-modern">
-          <td class="text-start">
-            <div class="d-flex align-items-center gap-2">
-              <div style="background: #DCFCE7; color: #10B981; width: 26px; height: 26px; border-radius: 7px; border: 1px solid #A7F3D0; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-                <i class="fas fa-boxes"></i>
-              </div>
-              <span style="font-weight: 700; font-size: 13px; color: #0F172A;">Tổng cộng</span>
-            </div>
-          </td>
-          <td class="text-center" style="font-weight: 700; font-size: 13.5px; color: #0F172A;">${totalStock.toLocaleString('vi-VN')}</td>
-          <td class="text-center" style="font-weight: 600; font-size: 13px; color: #334155;">${totalNhapAll.toLocaleString('vi-VN')}</td>
-          <td class="text-center" style="font-weight: 600; font-size: 13px; color: #334155;">${totalXuatAll.toLocaleString('vi-VN')}</td>
-          <td class="text-center">
-            <span class="trend-badge trend-up" style="background: transparent; padding: 0;"><i class="fas fa-arrow-up" style="font-size:10px;"></i> 8,2%</span>
-          </td>
-        </tr>
-      `;
+      // 3. Render bảng "Chi tiết xuất kho 30 ngày" (Thay thế 2 card Tồn kho & Cảnh báo cũ)
+      renderXuatKhoChiTiet(data);
 
       // 4. Tính toán & Vẽ biểu đồ Doughnut "Cơ cấu hàng tồn kho theo hạn sử dụng"
       let qtyGt7 = 0;      // Còn hạn > 7 ngày
@@ -4069,14 +5260,125 @@
         plugins: [slicePctLabelPlugin]
       });
 
-      // 5. Render bảng "Cảnh báo hạn sử dụng" bên dưới
-      renderFefoDashboard(data.fefo, expiringSoonQty);
+// Render chi tiết tồn kho theo Date HSD vào bảng phụ (Cột phải của Hàng 2.2)
+      renderHsdDetailTable(data.fefo);
 
-      // 6. Vẽ Biểu đồ: Gọi hàm cập nhật biểu đồ dựa trên cấu hình đang chọn
+      // 4. Vẽ Biểu đồ: Gọi hàm cập nhật biểu đồ dựa trên cấu hình đang chọn
       updateChartView();
     } // Kết thúc hàm renderDashboard
 
-function updateChartView() {
+    // ================= RENDER BẢNG CHI TIẾT XUẤT KHO 30 NGÀY =================
+    function renderXuatKhoChiTiet(data) {
+      const thead = document.getElementById('theadXuatKhoThang');
+      const tbody = document.getElementById('tbodyXuatKhoThang');
+      const tfoot = document.getElementById('tfootXuatKhoThang');
+      if (!thead || !tbody || !tfoot) return;
+
+      if (!data || !data.chart || !data.chart.groups || data.chart.groups.length === 0) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '<tr><td class="text-center py-4 text-muted">Không có dữ liệu thời gian</td></tr>';
+        tfoot.innerHTML = '';
+        return;
+      }
+
+      // Đổi tiêu đề theo kỳ
+      const titleEl = document.getElementById('lblTitleXuatKho');
+      if (titleEl && data.kpi && data.kpi.periodLabel) {
+        let timeType = document.getElementById('globalTimeType') ? document.getElementById('globalTimeType').value : 'month';
+        if (timeType === 'month') titleEl.innerText = 'Chi tiết xuất kho 30 ngày';
+        else titleEl.innerText = `Chi tiết xuất kho (${data.kpi.periodLabel})`;
+      }
+
+      const labels = data.chart.labels;
+      const groups = data.chart.groups;
+      
+      // Chỉ lấy 6 kho xuất thực tế (Bỏ qua LOTTE Mart DNI là tổng kho nhập/chứa)
+      const khoOrderXuat = ['VT1', 'VT2', 'Mỹ Tho', 'MTC', 'Mold', 'Bình Phước'];
+      const khoColors = {
+        'VT1': '#3B82F6', 'VT2': '#10B981', 'Mỹ Tho': '#FBBF24',
+        'MTC': '#EF4444', 'Mold': '#F472B6', 'Bình Phước': '#8B5CF6'
+      };
+
+      const todayYMD = getLocalYMD(new Date());
+      const todayIndex = groups.indexOf(todayYMD);
+
+      // 1. Tạo ma trận lưu trữ số lượng xuất
+      const matrix = {};
+      khoOrderXuat.forEach(k => {
+        matrix[k] = {};
+        groups.forEach(g => matrix[k][g] = 0);
+      });
+
+      // 2. Gom nhóm dữ liệu Xuất kho theo từng ngày
+      if (data.lichSu) {
+        data.lichSu.forEach(tx => {
+          if (tx.trangThai === 'Đã xác nhận' && tx.loai === 'Xuất' && khoOrderXuat.includes(tx.kho)) {
+            let timeType = document.getElementById('globalTimeType') ? document.getElementById('globalTimeType').value : 'month';
+            let groupKey = tx.ngay;
+            if (timeType === 'year') groupKey = tx.ngay.substring(0, 7);
+            
+            if (matrix[tx.kho][groupKey] !== undefined) {
+              matrix[tx.kho][groupKey] += Number(tx.soLuong) || 0;
+            }
+          }
+        });
+      }
+
+      // 3. Dựng Thead (Tiêu đề cột)
+      let thHtml = `<tr><th>Kho/Đơn vị</th>`;
+      labels.forEach((lb, idx) => {
+        let cls = (idx === todayIndex) ? 'col-today' : '';
+        let dispLb = lb;
+        // Tối ưu hiển thị: Nếu nhãn là '01', tự động gắn thêm '/Tháng' VD: '01/11'
+        if (lb.length <= 2 && groups[idx]) { 
+            const parts = groups[idx].split('-');
+            if (parts.length === 3) dispLb = `${parts[2]}/${parts[1]}`;
+        }
+        thHtml += `<th class="${cls}">${dispLb}</th>`;
+      });
+      thHtml += `<th>Tổng</th></tr>`;
+      thead.innerHTML = thHtml;
+
+      // 4. Dựng Tbody (Nội dung)
+      let trHtml = '';
+      const colTotals = new Array(groups.length).fill(0);
+      let grandTotal = 0;
+
+      khoOrderXuat.forEach(kho => {
+        let color = khoColors[kho];
+        let khoRowTotal = 0;
+        trHtml += `<tr>`;
+        trHtml += `<td><span class="kho-dot" style="background:${color}; box-shadow: 0 0 0 2px #fff, 0 0 0 3px ${color}33;"></span>${kho}</td>`;
+        
+        groups.forEach((g, idx) => {
+          let val = matrix[kho][g] || 0;
+          khoRowTotal += val;
+          colTotals[idx] += val;
+          grandTotal += val;
+          
+          let cls = (idx === todayIndex) ? 'col-today' : '';
+          if (val === 0) cls += ' empty-cell';
+          
+          trHtml += `<td class="${cls}">${val > 0 ? val.toLocaleString('vi-VN') : '0'}</td>`;
+        });
+        
+        trHtml += `<td>${khoRowTotal.toLocaleString('vi-VN')}</td>`;
+        trHtml += `</tr>`;
+      });
+      tbody.innerHTML = trHtml;
+
+      // 5. Dựng Tfoot (Dòng Tổng ngày)
+      let tfHtml = `<tr><td>Tổng ngày</td>`;
+      colTotals.forEach((total, idx) => {
+        let cls = (idx === todayIndex) ? 'col-today' : '';
+        tfHtml += `<td class="${cls}">${total > 0 ? total.toLocaleString('vi-VN') : '0'}</td>`;
+      });
+      tfHtml += `<td>${grandTotal.toLocaleString('vi-VN')}</td></tr>`;
+      tfoot.innerHTML = tfHtml;
+    }
+
+    // HÀM MỚI: Cập nhật và vẽ các biểu đồ
+    function updateChartView() {
       if (!APP_STATE || !APP_STATE.chart) return;
       
       const labels = APP_STATE.chart.labels;
@@ -4084,8 +5386,10 @@ function updateChartView() {
       const xuatData = APP_STATE.chart.xuat;
       const tonData = APP_STATE.chart.ton;
       
-      drawMainChart(labels, nhapData, xuatData, tonData);
-
+      // Gọi hàm vẽ biểu đồ chính
+      if (typeof drawMainChart === 'function') {
+        drawMainChart(labels, nhapData, xuatData, tonData);
+      }
       const khoOrder = ['VT1', 'VT2', 'Mỹ Tho', 'MTC', 'Mold', 'Bình Phước'];
       const khoColors = {
         'VT1': '#3B82F6', 'VT2': '#10B981', 'Mỹ Tho': '#FBBF24',
@@ -4117,169 +5421,219 @@ function updateChartView() {
             }
          }
       });
-      drawKhoPurchaseChart(labels, datasets2);
-    }
 
-    // Hàm render biểu đồ Chart.js (Biểu đồ tổng quan)
-function drawMainChart(labels, nhap, xuat, ton) {
-  const canvas = document.getElementById('mainChart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  
-  // Dọn dẹp biểu đồ cũ để tránh lỗi vẽ chồng
-  if (window.chartInstance) {
-    window.chartInstance.destroy();
-  }
-
-  // Tạo hiệu ứng Gradient mờ dần cho đường Tồn Kho
-  const gradientTon = ctx.createLinearGradient(0, 0, 0, 300);
-  gradientTon.addColorStop(0, 'rgba(37, 99, 235, 0.25)'); // Xanh dương nhạt phía trên
-  gradientTon.addColorStop(1, 'rgba(37, 99, 235, 0.0)');  // Trong suốt phía dưới đáy
-
-  window.chartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          type: 'line',
-          label: 'Tồn kho',
-          data: ton,
-          borderColor: '#2563EB',
-          backgroundColor: gradientTon,
-          borderWidth: 2.5,
-          fill: true,           // Bật chế độ đổ màu nền (Area Chart)
-          tension: 0.4,         // Làm cong đường thẳng cho mềm mại
-          pointRadius: 0,       // Ẩn các chấm tròn mặc định để giảm nhiễu
-          pointHoverRadius: 6,  // Chỉ hiện chấm tròn to khi di chuột vào
-          pointBackgroundColor: '#ffffff',
-          pointBorderColor: '#2563EB',
-          pointBorderWidth: 2.5,
-          order: 1
-        },
-        {
-          type: 'bar',
-          label: 'Nhập',
-          data: nhap,
-          backgroundColor: '#10B981',
-          borderRadius: 6,      // Bo góc cột mềm mại
-          barPercentage: 0.7,   // Tăng độ rộng để cột mập mạp hơn
-          categoryPercentage: 0.75,
-          order: 2
-        },
-        {
-          type: 'bar',
-          label: 'Xuất',
-          data: xuat,
-          backgroundColor: '#F43F5E',
-          borderRadius: 6,
-          barPercentage: 0.7,
-          categoryPercentage: 0.75,
-          order: 3
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: 'index',          // Hover 1 điểm sẽ hiển thị cả Nhập, Xuất, Tồn
-        intersect: false,
-      },
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            usePointStyle: true, // Đổi icon chú thích thành hình tròn/viên thuốc
-            boxWidth: 8,
-            font: { size: 12, weight: '600', family: "'TheJamsil', sans-serif" },
-            padding: 20
-          }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(15, 23, 42, 0.9)', // Nền tối sang trọng
-          titleFont: { size: 13, family: "'TheJamsil', sans-serif" },
-          bodyFont: { size: 12, family: "'TheJamsil', sans-serif" },
-          padding: 12,
-          cornerRadius: 8,
-          boxPadding: 4
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false }, // Ẩn hoàn toàn lưới dọc
-          ticks: { font: { size: 11, family: "'TheJamsil', sans-serif" }, color: '#64748B' }
-        },
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: '#E2E8F0',
-            borderDash: [5, 5], // Chuyển lưới ngang thành đường đứt nét
-            drawBorder: false   // Ẩn đường viền trục Y
-          },
-          ticks: { font: { size: 11, family: "'TheJamsil', sans-serif" }, color: '#64748B' },
-          title: { 
-            display: true, 
-            text: 'Số lượng (Cái)', 
-            font: { size: 11, weight: '600', family: "'TheJamsil', sans-serif" }, 
-            color: '#64748B' 
-          }
-        }
-      }
-    }
-  });
-}
-
-    // Hàm render biểu đồ Các kho đã mua (Stacked Bar)
-    function drawKhoPurchaseChart(labels, datasets) {
+      // Gọi hàm vẽ biểu đồ phụ (kho mua) - Kiểm tra và vẽ nội tuyến
       const canvas = document.getElementById('khoPurchaseChart');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (window.khoPurchaseChartInst) window.khoPurchaseChartInst.destroy();
-      
-      window.khoPurchaseChartInst = new Chart(ctx, {
-        type: 'bar', // Sử dụng Bar kết hợp thuộc tính stacked = true để tạo Cột Chồng
-        data: {
-          labels: labels,
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: { usePointStyle: true, boxWidth: 8, font: { size: 12, weight: '600' } }
-            },
-            tooltip: {
-              mode: 'index',
-              intersect: false,
-              callbacks: {
-                // Tự động tính tổng lượng mua của tất cả các kho trong ngày/tuần/tháng đó hiển thị ở chân Tooltip
-                footer: function(items) {
-                   const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
-                   return 'Tổng cộng: ' + total.toLocaleString('vi-VN') + ' Cái';
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (window.khoPurchaseChartInst) window.khoPurchaseChartInst.destroy();
+        
+        window.khoPurchaseChartInst = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: datasets2
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { usePointStyle: true, boxWidth: 8, font: { size: 12, weight: '600' } }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                  footer: function(items) {
+                     const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
+                     return 'Tổng cộng: ' + total.toLocaleString('vi-VN') + ' Cái';
+                  }
                 }
               }
-            }
-          },
-          scales: {
-            x: {
-              stacked: true, // Ép các cột chồng lên nhau
-              grid: { display: false },
-              ticks: { font: { size: 10.5 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 16 }
             },
-            y: {
-              stacked: true, // Tích lũy giá trị trục Y
-              beginAtZero: true,
-              title: { display: true, text: 'Số lượng mua (Cái)', font: { size: 11 } },
-              grid: { color: '#F1F5F9' },
-              ticks: { font: { size: 10.5 } }
+            scales: {
+              x: {
+                stacked: true,
+                grid: { display: false },
+                ticks: { font: { size: 10.5 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 16 }
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                title: { display: true, text: 'Số lượng mua (Cái)', font: { size: 11 } },
+                grid: { color: '#F1F5F9' },
+                ticks: { font: { size: 10.5 } }
+              }
             }
           }
-        }
-      });
+        });
+      }
+      
+// GỌI HÀM VẼ BẢNG CHI TIẾT
+      renderChartDetailTable();
     }
+
+// HÀM MỚI: Vẽ bảng chi tiết dữ liệu biểu đồ với Biến động & UI/UX cao cấp
+function renderChartDetailTable() {
+  const tbody = document.getElementById('tbodyChartDetail');
+  if (!tbody || !APP_STATE || !APP_STATE.chart) return;
+
+  const labels = APP_STATE.chart.labels || [];
+  const nhap = APP_STATE.chart.nhap || [];
+  const xuat = APP_STATE.chart.xuat || [];
+  const ton = APP_STATE.chart.ton || [];
+
+  let htmlRows = '';
+  let totalNhap = 0;
+  let totalXuat = 0;
+  let firstTonDau = -1;
+
+  if (labels.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-muted py-3 text-center">Chưa có dữ liệu</td></tr>';
+    if(document.getElementById('tfTotalNhap')) document.getElementById('tfTotalNhap').innerText = '0';
+    if(document.getElementById('tfTotalXuat')) document.getElementById('tfTotalXuat').innerText = '0';
+    if(document.getElementById('tfTotalBienDong')) document.getElementById('tfTotalBienDong').innerHTML = '';
+    return;
+  }
+
+  for (let i = 0; i < labels.length; i++) {
+    let n = nhap[i] || 0;
+    let x = xuat[i] || 0;
+    let tCuoi = ton[i] || 0;
+    let tDau = tCuoi - n + x;
+
+    if (i === 0) firstTonDau = tDau; 
+
+    totalNhap += n;
+    totalXuat += x;
+
+    // 1. Tính toán biến động
+    let bienDong = tCuoi - tDau; 
+    let ptBienDong = 0;
+    if (tDau !== 0) {
+      ptBienDong = (bienDong / Math.abs(tDau)) * 100;
+    } else if (bienDong !== 0) {
+      ptBienDong = bienDong > 0 ? 100 : -100;
+    }
+
+    // 2. Gộp Cột Biến động và % Biến động thành 1 Pillar dọc (Chuẩn Apple UI)
+    let varPill = '';
+    let statusPill = '';
+    let ptText = ptBienDong > 0 ? `+${ptBienDong.toFixed(1)}%` : (ptBienDong < 0 ? `${ptBienDong.toFixed(1)}%` : `0.0%`);
+
+    if (bienDong < 0) {
+      varPill = `<div class="d-flex flex-column align-items-center" style="line-height:1.2;"><span class="pill-var down" style="min-width: 52px; padding: 2px 6px;">${bienDong.toLocaleString('vi-VN')}</span><span style="font-size: 9.5px; color: #DC2626; font-weight: 700; margin-top: 2px; letter-spacing:-0.2px;">${ptText}</span></div>`;
+      statusPill = `<span class="pill-status down" style="min-width:auto; padding: 4px 8px; border-radius: 8px;"><i class="fas fa-arrow-down" style="font-size: 10px;"></i> Giảm</span>`;
+    } else if (bienDong > 0) {
+      varPill = `<div class="d-flex flex-column align-items-center" style="line-height:1.2;"><span class="pill-var up" style="min-width: 52px; padding: 2px 6px;">+${bienDong.toLocaleString('vi-VN')}</span><span style="font-size: 9.5px; color: #16A34A; font-weight: 700; margin-top: 2px; letter-spacing:-0.2px;">${ptText}</span></div>`;
+      statusPill = `<span class="pill-status up" style="min-width:auto; padding: 4px 8px; border-radius: 8px;"><i class="fas fa-arrow-up" style="font-size: 10px;"></i> Tăng</span>`;
+    } else {
+      varPill = `<div class="d-flex flex-column align-items-center" style="line-height:1.2;"><span class="pill-var zero" style="min-width: 52px; padding: 2px 6px;">0</span><span style="font-size: 9.5px; color: #64748B; font-weight: 700; margin-top: 2px; letter-spacing:-0.2px;">0.0%</span></div>`;
+      statusPill = `<span class="pill-status zero" style="min-width:auto; padding: 4px 8px; border-radius: 8px;"><i class="fas fa-minus" style="font-size: 10px;"></i> Giữ</span>`;
+    }
+
+    // 3. Render HTML từng dòng (Giảm từ 8 cột xuống còn 7 cột)
+    htmlRows += `
+      <tr style="border-bottom: 1px solid #F1F5F9;">
+        <td class="text-start" style="padding-left: 16px; font-weight: 700; color: #1E293B;">${labels[i]}</td>
+        <td class="text-end" style="font-variant-numeric: tabular-nums; font-size:13px; color:#334155;">${tDau.toLocaleString('vi-VN')}</td>
+        <td class="text-end fw-bold" style="color: #10B981; font-variant-numeric: tabular-nums; font-size:13px;">${n > 0 ? n.toLocaleString('vi-VN') : '0'}</td>
+        <td class="text-end fw-bold" style="color: #E60012; font-variant-numeric: tabular-nums; font-size:13px;">${x > 0 ? x.toLocaleString('vi-VN') : '0'}</td>
+        <td class="text-end fw-bold" style="color: #0F172A; font-variant-numeric: tabular-nums; font-size:13px;">${tCuoi.toLocaleString('vi-VN')}</td>
+        <td class="text-center align-middle">${varPill}</td>
+        <td class="text-center align-middle" style="padding-right: 16px;">${statusPill}</td>
+      </tr>
+    `;
+  }
+
+  tbody.innerHTML = htmlRows;
+
+  // Render Footer Tổng cộng
+  if (document.getElementById('tfTotalNhap')) { document.getElementById('tfTotalNhap').innerText = totalNhap.toLocaleString('vi-VN'); }
+  if (document.getElementById('tfTotalXuat')) { document.getElementById('tfTotalXuat').innerText = totalXuat.toLocaleString('vi-VN'); }
+
+  // Tính tổng biến động toàn kỳ
+  let totalBienDong = totalNhap - totalXuat;
+  let totalPtBienDong = 0;
+  if (firstTonDau !== 0) {
+    totalPtBienDong = (totalBienDong / Math.abs(firstTonDau)) * 100;
+  } else if (totalBienDong !== 0) {
+    totalPtBienDong = totalBienDong > 0 ? 100 : -100;
+  }
+
+  // UI cho Tổng biến động (Đưa tỷ lệ % xuống dòng bên trong nhãn)
+  let totalVarPill = `<div class="d-flex flex-column align-items-center" style="line-height:1.2;"><span class="pill-var zero" style="min-width: 52px; padding: 2px 6px;">0</span><span style="font-size: 9.5px; color: #64748B; font-weight: 700; margin-top: 2px; letter-spacing:-0.2px;">0.0%</span></div>`;
+  let totalPtText = '0.0%';
+  if (totalBienDong < 0) {
+    totalPtText = `${totalPtBienDong.toFixed(1)}%`;
+    totalVarPill = `<div class="d-flex flex-column align-items-center" style="line-height:1.2;"><span class="pill-var down" style="min-width: 52px; padding: 2px 6px;">${totalBienDong.toLocaleString('vi-VN')}</span><span style="font-size: 9.5px; color: #DC2626; font-weight: 700; margin-top: 2px; letter-spacing:-0.2px;">${totalPtText}</span></div>`;
+  } else if (totalBienDong > 0) {
+    totalPtText = `+${totalPtBienDong.toFixed(1)}%`;
+    totalVarPill = `<div class="d-flex flex-column align-items-center" style="line-height:1.2;"><span class="pill-var up" style="min-width: 52px; padding: 2px 6px;">+${totalBienDong.toLocaleString('vi-VN')}</span><span style="font-size: 9.5px; color: #16A34A; font-weight: 700; margin-top: 2px; letter-spacing:-0.2px;">${totalPtText}</span></div>`;
+  }
+  
+  if (document.getElementById('tfTotalBienDong')) document.getElementById('tfTotalBienDong').innerHTML = totalVarPill;
+}
+// HÀM MỚI: Render chi tiết các lô hàng theo Date HSD vào bảng bên phải
+function renderHsdDetailTable(fefoData) {
+  const tbody = document.getElementById('tbodyHsdDetailTable');
+  if (!tbody) return;
+
+  if (!fefoData || !fefoData.batches || fefoData.batches.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-muted py-3 text-center">Chưa có dữ liệu lô hàng HSD.</td></tr>`;
+    document.getElementById('tfHsdTotalNhap').innerText = '0';
+    document.getElementById('tfHsdTotalXuat').innerText = '0';
+    document.getElementById('tfHsdTotalTon').innerText = '0';
+    return;
+  }
+
+  let htmlRows = '';
+  let sumNhap = 0;
+  let sumXuat = 0;
+  let sumTon = 0;
+
+  fefoData.batches.forEach(b => {
+    const slBanDau = Number(b.soLuongBanDau || (b.tonConLai + (b.daXuat || 0))) || b.tonConLai;
+    const slTon = Number(b.tonConLai) || 0;
+    const slXuat = Math.max(0, slBanDau - slTon);
+
+    sumNhap += slBanDau;
+    sumXuat += slXuat;
+    sumTon += slTon;
+
+    let nhomBadge = `<span class="badge bg-success text-white" style="font-size:10px;">Còn hạn</span>`;
+    if (b.daysLeft < 0) {
+      nhomBadge = `<span class="badge bg-danger text-white" style="font-size:10px;">Hết hạn</span>`;
+    } else if (b.daysLeft <= 3) {
+      nhomBadge = `<span class="badge bg-warning text-dark" style="font-size:10px;">1–3 ngày</span>`;
+    } else if (b.daysLeft <= 7) {
+      nhomBadge = `<span class="badge bg-info text-dark" style="font-size:10px;">4–7 ngày</span>`;
+    } else {
+      nhomBadge = `<span class="badge bg-light text-dark border" style="font-size:10px;">Trẻ >7 ngày</span>`;
+    }
+
+    htmlRows += `
+      <tr style="border-bottom: 1px solid #F1F5F9;">
+        <td class="text-start" style="padding-left: 8px; font-variant-numeric: tabular-nums;">${b.ngayNhapVN || '-'}</td>
+        <td class="fw-bold font-variant-numeric: tabular-nums" style="color: #1E293B;">${b.hsdVN || b.hsdRaw || '-'}</td>
+        <td class="text-end font-variant-numeric: tabular-nums">${slBanDau.toLocaleString('vi-VN')}</td>
+        <td class="text-end font-variant-numeric: tabular-nums" style="color: #E60012;">${slXuat > 0 ? slXuat.toLocaleString('vi-VN') : '0'}</td>
+        <td class="text-end font-variant-numeric: tabular-nums fw-bold" style="color: #10B981;">${slTon.toLocaleString('vi-VN')}</td>
+        <td class="text-end" style="padding-right: 8px;">${nhomBadge}</td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = htmlRows;
+
+  // Cập nhật dòng tổng cộng ở footer
+  document.getElementById('tfHsdTotalNhap').innerText = sumNhap.toLocaleString('vi-VN');
+  document.getElementById('tfHsdTotalXuat').innerText = sumXuat.toLocaleString('vi-VN');
+  document.getElementById('tfHsdTotalTon').innerText = sumTon.toLocaleString('vi-VN');
+}
+// KẾT THÚC ĐOẠN COPY
 
     // ================= TƯƠNG TÁC UX GIỮA BIỂU ĐỒ TRÒN & BẢNG CẢNH BÁO HSD =================
     function highlightHsdSlice(index) {
@@ -4419,11 +5773,6 @@ function drawMainChart(labels, nhap, xuat, ton) {
       const yyyy_mm_dd = getLocalYMD(now);
       const yyyy_mm = yyyy_mm_dd.slice(0, 7);
       
-      if (document.getElementById('globalTimeType')) {
-        document.getElementById('globalTimeType').value = 'month';
-        document.getElementById('globalTimeInput').value = yyyy_mm;
-      }
-      
       document.getElementById('reconMonth').value = yyyy_mm;
       document.getElementById('txNgay').value = yyyy_mm_dd;
       
@@ -4431,7 +5780,14 @@ function drawMainChart(labels, nhap, xuat, ton) {
       setInterval(syncAllVNDateInputs, 150);
 
       setTxMode('Nhập'); 
-      reloadAllData();
+      
+      // Tự động gọi chức năng xem theo Tuần khi vừa khởi động
+      const btnTuan = document.querySelector('.ios-tab[data-type="week"]');
+      if (btnTuan) {
+        changeGlobalTimeType('week', btnTuan);
+      } else {
+        reloadAllData(); // Dự phòng nếu không tìm thấy nút
+      }
     };
 
     // --- HÀM CHUYỂN ĐỔI CHẾ ĐỘ TÌM KIẾM ---
@@ -4512,9 +5868,19 @@ function drawMainChart(labels, nhap, xuat, ton) {
       reloadAllData();
     }
 
-function reloadAllData() {
-      // CODE MỚI: Dùng hàm quản lý Load có hiệu ứng làm mờ
-      showGlobalLoader(); 
+const APP_DATA_CACHE = {};
+
+    function applyAppStateInstant(data, timePayload) {
+      if (!data || !data.kpi) return;
+      APP_STATE = data;
+      populateProductDatalist(data.products || []);
+      renderDashboard(data, timePayload);
+      renderHistoryTable();
+      renderReconView();
+    }
+
+    function reloadAllData() {
+      hideGlobalLoader();
       
       let timePayload = "";
       const globalTypeEl = document.getElementById('globalTimeType');
@@ -4533,16 +5899,38 @@ function reloadAllData() {
       }
       
       const khoFilter = document.getElementById('globalKho') ? document.getElementById('globalKho').value : 'ALL';
+      const cacheKey = `TK_CACHE_${timePayload}_${khoFilter}`;
 
+      // 1. HIỂN THỊ TỨC THÌ (ĐỘ TRỄ = 0ms) TỪ RAM HOẶC LOCALSTORAGE
+      if (APP_DATA_CACHE[cacheKey]) {
+        applyAppStateInstant(APP_DATA_CACHE[cacheKey], timePayload);
+      } else {
+        try {
+          const savedStr = localStorage.getItem(cacheKey) || localStorage.getItem('TK_CACHE_LAST_ACTIVE');
+          if (savedStr) {
+            const parsedData = JSON.parse(savedStr);
+            APP_DATA_CACHE[cacheKey] = parsedData;
+            applyAppStateInstant(parsedData, timePayload);
+          }
+        } catch (e) {}
+      }
+
+      // 2. ĐỒNG BỘ NGẦM DƯỚI NỀN (KHÔNG CHẶN MÀN HÌNH)
       callApi('getAppData', { monthYear: timePayload, khoFilter: khoFilter }, (data) => {
-          APP_STATE = data;
-          populateProductDatalist(data.products || []);
-          renderDashboard(data, timePayload);
-          renderHistoryTable();
-          renderReconView();
-          
-          // CODE MỚI: Tắt hiệu ứng Load
-          hideGlobalLoader(); 
+        if (!data || !data.kpi) return;
+        APP_DATA_CACHE[cacheKey] = data;
+        try {
+          const jsonStr = JSON.stringify(data);
+          localStorage.setItem(cacheKey, jsonStr);
+          localStorage.setItem('TK_CACHE_LAST_ACTIVE', jsonStr);
+        } catch (e) {}
+
+        const curType = document.getElementById('globalTimeType') ? document.getElementById('globalTimeType').value : 'month';
+        const curInput = document.getElementById('globalTimeInput') ? document.getElementById('globalTimeInput').value : '';
+        const curKho = document.getElementById('globalKho') ? document.getElementById('globalKho').value : 'ALL';
+        if (`${curType}|${curInput}` === timePayload && curKho === khoFilter) {
+          applyAppStateInstant(data, timePayload);
+        }
       });
     }
 
@@ -4688,7 +6076,7 @@ function autoFillProduct() {
       if (!badge || !APP_STATE || !APP_STATE.tonKhaDungHienTai) return;
       
       const mode = document.getElementById('txLoai').value;
-      const kho = (mode === 'Nhập') ? 'LOTTE Mart DNI' : document.getElementById('txKho').value;
+      const kho = (mode === 'Nhập' || mode === 'Xuất' || mode === 'Kiểm kê') ? 'LOTTE Mart DNI' : document.getElementById('txKho').value;
       const maSP = document.getElementById('txMaSP').value.trim().toUpperCase();
 
       if (mode === 'Xuất') {
@@ -4816,30 +6204,24 @@ function setTxMode(mode) {
         inputDoiTac.placeholder = 'VD: ABC Bakery (Không nhập Taekwang)';
         inputHSD.required = true;
 
-      } else if (mode === 'Xuất') {
-        // TAB XUẤT KHO: Gom đúng 2 dòng, cân đối tỷ lệ 100% ở Dòng 1
-        // Dòng 1: Ngày (13.5%) + Kho (10%) + Mã SP (14.5%) + Tên SP (21%) + Số lượng (10%) + HSD (13.5%) + Đơn vị nhận (17.5%) = 100%
-        setSize(wrapNgay, 'col-md-2', '13.5%');
-        setSize(wrapKho, 'col-md-1', '10%');
-        setSize(wrapMaSP, 'col-md-2', '14.5%');
-        setSize(wrapTenSP, 'col-md-3', '21%');
-        setSize(wrapSoLuong, 'col-md-1', '10%');
-        setSize(wrapHSD, 'col-md-2', '13.5%');
-        setSize(wrapDoiTac, 'col-md-2', '17.5%');
+        } else if (mode === 'Xuất') {
+        // TAB XUẤT FEFO: Ép kho xuất LOTTE Mart DNI, Ẩn HSD, Chuyển txKho thành Đơn vị nhận
+        setSize(wrapNgay, 'col-md-2', '15%');
+        setSize(wrapKho, 'col-md-2', '15%'); // Dùng cho Đơn vị nhận
+        setSize(wrapMaSP, 'col-md-3', '20%');
+        setSize(wrapTenSP, 'col-md-4', '35%');
+        setSize(wrapSoLuong, 'col-md-1', '15%');
+        
         wrapKhoNhan.style.display = 'none';
+        wrapHSD.style.display = 'none';    // Ẩn để Backend tự tính FEFO
+        wrapDoiTac.style.display = 'none'; // Ẩn ô tự gõ, dùng txKho làm Đơn vị nhận
 
         btnXuat.className = 'neo-toggle-btn active active-green';
         btnSub.className = 'btn-action btn-green flex-grow-1';
-        hint.innerHTML = 'Chế độ: <strong class="text-success">LOTTE MART XUẤT GIAO CHO ĐƠN VỊ TAEKWANG</strong>';
+        hint.innerHTML = 'Chế độ: <strong class="text-success">XUẤT TỰ ĐỘNG FEFO (KHO NGUỒN: LOTTE MART DNI)</strong>';
         document.getElementById('lblNgay').innerHTML = 'Ngày giao <span class="req">*</span>';
-        document.getElementById('lblKho').innerHTML = 'Kho xuất <span class="req">*</span>';
-        document.getElementById('lblSoLuong').innerHTML = 'Số lượng <span class="req">*</span>';
-        document.getElementById('lblHSD').innerHTML = 'HSD lô xuất';
-        document.getElementById('lblDoiTac').innerHTML = 'Đơn vị nhận <span class="req">*</span>';
-        
-        const kho = document.getElementById('txKho').value;
-        inputDoiTac.value = (kho === 'LOTTE Mart DNI') ? 'Khách hàng Taekwang' : `Taekwang - Đơn vị ${kho}`;
-        inputDoiTac.readOnly = false;
+        document.getElementById('lblKho').innerHTML = 'Đơn vị nhận <span class="req">*</span>';
+        document.getElementById('lblSoLuong').innerHTML = 'Số lượng <span class="req">*</span>';    
 
       } else if (mode === 'Chuyển kho') {
         // TAB CHUYỂN KHO NỘI BỘ: Gom đúng 2 dòng, cân đối tỷ lệ 100% ở Dòng 1
@@ -4923,7 +6305,7 @@ function handleSaveTx(e) {
       const doiTac = document.getElementById('txDoiTac') ? document.getElementById('txDoiTac').value.trim() : "";
 
       if (mode === 'Nhập' && doiTac.toUpperCase().includes('TAEKWANG')) {
-        alert('Cảnh báo nghiệp vụ: Khi Nhập kho, nhà cung cấp giao bánh mì cho LOTTE Mart, tuyệt đối không sử dụng Taekwang làm nhà cung cấp!');
+        iosAlert('Khi Nhập kho, nhà cung cấp giao bánh mì cho LOTTE Mart, tuyệt đối không sử dụng Taekwang làm nhà cung cấp!', 'Cảnh báo nghiệp vụ');
         return;
       }
 
@@ -4944,11 +6326,13 @@ function handleSaveTx(e) {
           chungTu: "", 
           lyDo: document.getElementById('txGhiChu').value.trim(),
           nguoiThucHien: document.getElementById('txNguoiTH').value.trim(),
-          hsd: document.getElementById('txHSD') ? document.getElementById('txHSD').value : "", // Truyền kèm HSD của lô khi kiểm kê
+          hsd: document.getElementById('txHSD') ? document.getElementById('txHSD').value : "", 
           requestId: reqId
         };
-        callApi('luuKiemKeThucTe', kkPayload, (res) => {
-            btn.disabled = false; btn.innerHTML = oldText; alert(res.message);
+        callApi('luuKiemKeThucTe', kkPayload, async (res) => {
+            btn.disabled = false; btn.innerHTML = oldText; 
+            // Dùng modal iOS thay cho alert
+            await iosAlert(res.message, res.success ? 'Thành công' : 'Thông báo');
             if (res.success) { resetTxForm(); reloadAllData(); }
         });
         return;
@@ -4967,19 +6351,34 @@ function handleSaveTx(e) {
         doiTac: doiTac,
         maBill: "", 
         ghiChu: document.getElementById('txGhiChu').value.trim(),
-        trangThai: 'Đã xác nhận', // Fix cứng trạng thái thay vì đọc thẻ HTML đã xóa
+        trangThai: 'Đã xác nhận',
         requestId: reqId
       };
-      callApi('luuGiaoDichMoi', payload, (res) => {
+      callApi('luuGiaoDichMoi', payload, async (res) => {
           btn.disabled = false; btn.innerHTML = oldText;
-          if (!res.success) { alert(res.message); return; }
+          if (!res.success) { 
+            // Dùng modal iOS thay cho alert
+            await iosAlert(res.message, 'Thông báo'); 
+            return; 
+          }
+          
           const pFound = (APP_STATE && APP_STATE.products) ? APP_STATE.products.find(p => p.maSP.toUpperCase() === payload.maSP.toUpperCase()) : null;
-          const [yr, mo, dy] = (payload.ngay || '').split('-'); const ngayVN = (yr && mo && dy) ? `${dy}/${mo}/${yr}` : payload.ngay;
+          const [yr, mo, dy] = (payload.ngay || '').split('-'); 
+          const ngayVN = (yr && mo && dy) ? `${dy}/${mo}/${yr}` : payload.ngay;
           const donGia = pFound ? (Number(pFound.donGia) || 4100) : 4100;
-          const savedTxObj = { maGD: res.maGD || '', ngay: payload.ngay, ngayVN: ngayVN, loai: mode, kho: payload.kho, maSP: payload.maSP, tenSP: payload.tenSP, donVi: pFound ? pFound.donVi : 'Cái', maVach: pFound ? (pFound.maVach || '') : '', donGia: donGia, thueGTGT: pFound ? (pFound.thueGTGT || '0%') : '0%', soLuong: payload.soLuong, doiTac: payload.doiTac || (mode === 'Chuyển kho' ? `Kho ${payload.khoNhan}` : 'Taekwang'), maBill: res.maGD || '', ghiChu: payload.ghiChu || '', nguoiThucHien: 'Nguyễn Hữu Quan' };
+          
+          const savedTxObj = { 
+            maGD: res.maGD || '', ngay: payload.ngay, ngayVN: ngayVN, loai: mode, kho: payload.kho, maSP: payload.maSP, tenSP: payload.tenSP, 
+            donVi: pFound ? pFound.donVi : 'Cái', maVach: pFound ? (pFound.maVach || '') : '', donGia: donGia, thueGTGT: pFound ? (pFound.thueGTGT || '0%') : '0%', 
+            soLuong: payload.soLuong, doiTac: payload.doiTac || (mode === 'Chuyển kho' ? `Kho ${payload.khoNhan}` : 'Taekwang'), 
+            maBill: res.maGD || '', ghiChu: payload.ghiChu || '', nguoiThucHien: 'Nguyễn Hữu Quan' 
+          };
           
           window.LAST_SAVED_EXPORT_TX = savedTxObj;
-          if (mode === 'Xuất') { const btnPrintLast = document.getElementById('btnPrintLastExport'); if (btnPrintLast) btnPrintLast.style.display = 'inline-flex'; }
+          if (mode === 'Xuất') { 
+            const btnPrintLast = document.getElementById('btnPrintLastExport'); 
+            if (btnPrintLast) btnPrintLast.style.display = 'inline-flex'; 
+          }
           openTxSuccessModal(savedTxObj); resetTxForm(); reloadAllData();
       });
     }
@@ -5347,7 +6746,14 @@ function handleSaveTx(e) {
         return s;
       };
 
-      const itemsHtml = txList.map((item, idx) => {
+      // GỘP CÁC DÒNG CÙNG SẢN PHẨM TRƯỚC KHI IN
+      const groupedTxList = Object.values(txList.reduce((acc, item) => {
+          if (!acc[item.maSP]) { acc[item.maSP] = { ...item }; } 
+          else { acc[item.maSP].soLuong = (Number(acc[item.maSP].soLuong) || 0) + (Number(item.soLuong) || 0); }
+          return acc;
+      }, {}));
+
+      const itemsHtml = groupedTxList.map((item, idx) => {
         const qty = Number(item.soLuong) || 0;
         const price = Number(item.donGia !== undefined ? item.donGia : 4100);
         const amount = qty * price;
@@ -5564,7 +6970,7 @@ function handleSaveTx(e) {
 function renderHistoryTable() {
       if (!APP_STATE) return;
       
-      // MÃ MỚI: Dọn dẹp các menu cũ đã được gắn vào body để tránh rác HTML
+      // Dọn dẹp các menu cũ đã được gắn vào body để tránh rác HTML
       document.querySelectorAll('body > .tx-action-menu').forEach(el => el.remove());
 
       const q = document.getElementById('searchTx').value.trim().toLowerCase();
@@ -5584,16 +6990,40 @@ function renderHistoryTable() {
       });
 
       const tbody = document.getElementById('tbodyLichSu');
+      
+      // XỬ LÝ ẨN TIÊU ĐỀ CỘT "NCC ĐẦU VÀO / ĐƠN VỊ NHẬN" VÀ GỘP CỘT SẢN PHẨM
+      const theadTr = document.querySelector('.table-premium-modern thead tr');
+      if (theadTr) {
+          theadTr.innerHTML = `
+            <th style="width: 40px; vertical-align: middle;"><input type="checkbox" id="selectAllTx" onchange="toggleSelectAllTx(this)" style="cursor: pointer; transform: scale(1.1);"></th>
+            <th class="text-start" style="width: 140px;">Mã GD</th>
+            <th class="text-center" style="width: 90px;">Ngày</th>
+            <th class="text-center" style="width: 60px;">Loại</th>
+            <th class="text-center" style="width: 80px;">Kho</th>
+            <th class="text-center" style="width: 120px;">Mã SP</th>
+            <th class="text-start" style="width: auto;">Sản phẩm</th>
+            <th class="text-center" style="width: 80px;">Số lượng</th>
+            <th class="text-center" style="width: 110px;">Thành tiền</th>
+            <th class="text-center" style="width: 100px;">HSD</th>
+            <th style="width: 40px; text-align: center;"></th>
+          `;
+      }
+
       if (rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" class="text-muted py-5 text-center">Chưa có giao dịch phát sinh.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="text-muted py-5 text-center">Chưa có giao dịch phát sinh.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = rows.map(r => {
+      // Biến để cộng dồn Tổng Số Lượng và Tổng Thành Tiền
+      let sumSoLuong = 0;
+      let sumThanhTien = 0;
+
+      const htmlRows = rows.map(r => {
         const isConfirmed = r.trangThai === 'Đã xác nhận';
         
         let pillClass = 'in';
         let typeIcon = '↓'; 
+        let tooltipText = r.loai;
         if (r.loai === 'Nhập' || r.loai === 'Chuyển nhập' || r.loai === 'Điều chỉnh tăng') {
           pillClass = 'in';
           typeIcon = '↓';
@@ -5603,37 +7033,31 @@ function renderHistoryTable() {
         }
 
         const pFound = (APP_STATE.products || []).find(p => p.maSP === r.maSP);
-        const imgUrl = (pFound && pFound.anhSP) ? pFound.anhSP : 'https://placehold.co/40x40/E2E8F0/64748B?text=SP';
-
-        const dateParts = r.ngay.split('-');
-        let monthText = '...';
-        if (dateParts.length === 3) {
-          const m = parseInt(dateParts[1]);
-          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          monthText = monthNames[m - 1];
-        }
+        const imgUrl = (pFound && pFound.anhSP) ? pFound.anhSP : '';
 
         const numQty = Number(r.soLuong) || 0;
         const numPrice = Number(r.donGia) || 0;
         const numTotal = numQty * numPrice;
+        
+        // Cộng dồn vào biến Tổng
+        sumSoLuong += numQty;
+        sumThanhTien += numTotal;
 
         let hsdBadge = '-';
         if (r.hsd) {
           const diffMs = new Date(r.hsdRaw + 'T00:00:00') - new Date();
           const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-          let daysText = diffDays > 0 ? `Còn ${diffDays} ngày` : (diffDays === 0 ? 'Hết hạn hôm nay' : 'Đã quá hạn');
           
-          hsdBadge = `
-            <div class="stacked-text align-items-center">
-              <span class="main fw-bold" style="font-size: 11.5px;">${r.hsd}</span>
-              <span class="badge-hsd-warning">${daysText}</span>
-            </div>
-          `;
+          let colorClass = 'text-success';
+          if (diffDays <= 0) colorClass = 'text-danger';
+          else if (diffDays <= 3) colorClass = 'text-warning';
+
+          hsdBadge = `<span class="fw-bold ${colorClass}" style="font-size: 11.5px; white-space: nowrap;">${r.hsd}</span>`;
         }
 
         const sttIndicator = isConfirmed
-          ? `<span title="Đã xác nhận" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10B981; margin-right:6px; box-shadow: 0 0 0 2px #D1FAE5;"></span>`
-          : `<span title="Nháp" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94A3B8; margin-right:6px; box-shadow: 0 0 0 2px #F1F5F9;"></span>`;
+          ? `<span title="Đã xác nhận" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10B981; margin-right:6px; box-shadow: 0 0 0 2px #D1FAE5; flex-shrink: 0;"></span>`
+          : `<span title="Nháp" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#94A3B8; margin-right:6px; box-shadow: 0 0 0 2px #F1F5F9; flex-shrink: 0;"></span>`;
 
         const actions = `
           <div style="position: relative;">
@@ -5667,48 +7091,59 @@ function renderHistoryTable() {
           </div>
         `;
 
+        const imgHtml = imgUrl ? `<img src="${imgUrl}" class="prod-img-mini me-2" style="width:30px; height:30px; flex-shrink:0;" onerror="this.style.display='none';">` : '';
+
         return `
           <tr>
             <td style="vertical-align: middle;"><input type="checkbox" class="tx-checkbox" value="${r.rowIndex}" onchange="updateBulkCancelButton()" style="cursor: pointer; transform: scale(1.1);"></td>
-            <td class="text-start fw-bold" style="font-size:11.5px; color:#1E293B;">
+            <td class="text-start fw-bold" style="font-size:11.5px; color:#1E293B; white-space: nowrap;">
               <div class="d-flex align-items-center">
                 ${sttIndicator}
                 ${r.maGD || '-'}
               </div>
             </td>
-            <td>
-              <div class="stacked-text">
-                <span class="main font-variant-numeric: tabular-nums">${r.ngayVN}</span>
-                <span class="sub text-uppercase">${monthText}</span>
-              </div>
-            </td>
-            <td><span class="pill-tx-type ${pillClass}">${typeIcon} ${r.loai}</span></td>
-            <td class="fw-bold" style="color:#1E293B;">${r.kho}</td>
-            <td class="fw-bold" style="font-size:11.5px; color:#475569;">${r.maSP}</td>
-          <td style="width:40px; padding-right:2px;">
-          <img src="${imgUrl}" class="prod-img-mini" onerror="this.onerror=null; this.src='https://placehold.co/40x40/E2E8F0/64748B?text=SP';">
-        </td>
-            <td class="text-start">
-              <div class="stacked-text">
-                <!-- Bổ sung white-space: nowrap để text nằm 1 dòng -->
-                <span class="main fw-bold" style="font-size:12px; color:#1E293B; white-space: nowrap;">${r.tenSP}</span>
-              </div>
+            <td class="text-center fw-bold font-variant-numeric: tabular-nums" style="font-size:12px; color:#1E293B; white-space: nowrap;">
+              ${r.ngayVN}
             </td>
             <td class="text-center">
-              <div class="stacked-text">
-                <span class="main fw-bold" style="font-size:14px; color:#1E293B;">${numQty.toLocaleString('vi-VN')}</span>
-                <span class="sub">${r.donVi || 'Cái'}</span>
+              <span class="pill-tx-type ${pillClass}" title="${tooltipText}" style="padding: 4px 8px; font-size: 14px;">${typeIcon}</span>
+            </td>
+            <td class="text-center fw-bold" style="color:#1E293B; font-size:12px; white-space: nowrap;">${r.kho}</td>
+            <td class="text-center fw-bold" style="font-size:11.5px; color:#475569; white-space: nowrap;">${r.maSP}</td>
+            <td class="text-start">
+              <div class="d-flex align-items-center">
+                ${imgHtml}
+                <span class="fw-bold" style="font-size:12px; color:#1E293B; white-space: nowrap;">${r.tenSP}</span>
               </div>
             </td>
-            <td>
-              <span class="badge-amount-total">${numTotal.toLocaleString('vi-VN')} đ</span>
+            <td class="text-center font-variant-numeric: tabular-nums">
+              <span class="fw-bold" style="font-size:14px; color:#1E293B;">${numQty.toLocaleString('vi-VN')}</span>
             </td>
-            <td>${hsdBadge}</td>
-            <td class="text-start fw-bold" style="color:#475569; font-size:11.5px;">${r.doiTac || '-'}</td>
+            <td class="text-center font-variant-numeric: tabular-nums">
+              <span class="fw-bold" style="font-size:13.5px; color:#10B981;">${numTotal > 0 ? numTotal.toLocaleString('vi-VN') : '-'}</span>
+            </td>
+            <td class="text-center">${hsdBadge}</td>
             <td style="text-align: center; vertical-align: middle;">${actions}</td>
           </tr>
         `;
       }).join('');
+      
+      // Tạo HTML cho dòng Tổng cộng (Footer)
+      const footerHtml = `
+          <tr style="background-color: #F8FAFC; border-top: 2px solid #E2E8F0;">
+            <td colspan="7" class="text-end fw-bold" style="font-size: 13.5px; color: #1E293B; padding-right: 20px;">TỔNG CỘNG:</td>
+            <td class="text-center font-variant-numeric: tabular-nums">
+              <span class="fw-bold" style="font-size: 15px; color: #0F172A;">${sumSoLuong.toLocaleString('vi-VN')}</span>
+            </td>
+            <td class="text-center font-variant-numeric: tabular-nums">
+              <span class="fw-bold" style="font-size: 14px; color: #10B981;">${sumThanhTien > 0 ? sumThanhTien.toLocaleString('vi-VN') : '-'}</span>
+            </td>
+            <td colspan="2"></td>
+          </tr>
+      `;
+
+      // Nối danh sách các dòng và dòng Tổng cộng lại với nhau
+      tbody.innerHTML = htmlRows + footerHtml;
       
       const selectAllEl = document.getElementById('selectAllTx');
       if (selectAllEl) selectAllEl.checked = false;
@@ -5748,166 +7183,1051 @@ async function confirmDraftTx(rowIndex, currentQty) {
       });
     }
 
-    async function promptBulkCancelTx() {
-      const checkboxes = document.querySelectorAll('.tx-checkbox:checked');
-      if (checkboxes.length === 0) return;
-      
-      const rowIndexes = Array.from(checkboxes).map(c => c.value);
-      const lyDo = await iosPrompt(`Bạn đang chọn ${rowIndexes.length} giao dịch.\n\nNhập lý do HỦY HÀNG LOẠT (Dữ liệu sẽ chuyển sang trạng thái Đã hủy và tính lại tồn kho):`, '', 'Hủy nhiều giao dịch');
-      if (!lyDo) return;
-      
-      const btnBulk = document.getElementById('btnBulkCancel');
-      const oldText = btnBulk.innerHTML;
-      btnBulk.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-      btnBulk.disabled = true;
+let RECON_ACTIVE_TAB = 'detail';
 
-      callApi('huyNhieuGiaoDich', { rowIndexes: rowIndexes, lyDo: lyDo, nguoiThucHien: 'Nguyễn Hữu Quan' }, async (res) => { 
-        await iosAlert(res.message); 
-        btnBulk.innerHTML = oldText;
-        btnBulk.disabled = false;
-        reloadAllData(); 
-      });
+    function switchReconTab(tabKey, btnEl) {
+      RECON_ACTIVE_TAB = tabKey;
+      document.querySelectorAll('.recon-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+
+      const stFilterEl = document.getElementById('reconFilterStatus');
+      if (stFilterEl) {
+        if (tabKey === 'diff') stFilterEl.value = 'LECH';
+        else if (stFilterEl.value === 'LECH') stFilterEl.value = 'ALL';
+      }
+      renderReconView();
     }
 
-function renderReconView() {
+    function onReconFilterKhoChange(khoVal) {
+      const topSelect = document.getElementById('reconKho');
+      if (topSelect && khoVal !== 'ALL') {
+        topSelect.value = khoVal;
+      }
+      renderReconView();
+    }
+
+const DON_GIA_BANH_MAC_DINH = 4100;
+
+    // Lấy Hạn mức công nợ của từng kho từ sheet KHACH_HANG (Cột F)
+    function getKhoCreditLimitFromSheet(khoKey) {
+      if (APP_STATE && Array.isArray(APP_STATE.khachHang) && APP_STATE.khachHang.length > 0) {
+        const khoUpper = String(khoKey || '').toUpperCase();
+        const found = APP_STATE.khachHang.find(kh => {
+          const searchStr = ((kh.diaChiGiaoHang || '') + ' ' + (kh.tenDonVi || '') + ' ' + (kh.diaChi || '')).toUpperCase();
+          if (khoUpper === 'VT1' && (searchStr.includes('VT 1') || searchStr.includes('VT1') || searchStr.includes('BIÊN HÒA 2'))) return true;
+          if (khoUpper === 'VT2' && (searchStr.includes('VT 2') || searchStr.includes('VT2') || searchStr.includes('LONG BÌNH'))) return true;
+          if (khoUpper === 'MỸ THO' && (searchStr.includes('MỸ THO') || searchStr.includes('ĐỒNG THÁP') || searchStr.includes('TIỀN GIANG'))) return true;
+          if (khoUpper === 'BÌNH PHƯỚC' && (searchStr.includes('BÌNH PHƯỚC') || searchStr.includes('MINH HƯNG'))) return true;
+          if (khoUpper === 'MTC' && searchStr.includes('MTC')) return true;
+          if (khoUpper === 'MOLD' && searchStr.includes('MOLD')) return true;
+          return searchStr.includes(khoUpper);
+        });
+        if (found && Number(found.hanMucCongNo) > 0) {
+          return Number(found.hanMucCongNo);
+        }
+      }
+      // Dự phòng đúng theo dữ liệu cột F trên sheet KHACH_HANG nếu cache trình duyệt chưa kịp làm mới
+      return khoKey === 'Bình Phước' ? 20000000 : 200000000;
+    }
+
+    function getReconWarehouseSummaryRows() {
+      const khoOrder = [
+        { key: 'VT1', dotColor: '#10B981' },
+        { key: 'VT2', dotColor: '#10B981' },
+        { key: 'Mỹ Tho', dotColor: '#F59E0B' },
+        { key: 'MTC', dotColor: '#EF4444' },
+        { key: 'Mold', dotColor: '#8B5CF6' },
+        { key: 'Bình Phước', dotColor: '#0284C7' }
+      ];
+
+      const monthEl = document.getElementById('reconMonth');
+      const monthKey = (monthEl && monthEl.value) ? monthEl.value : 'DEFAULT';
+      const searchVal = (document.getElementById('reconSearchInput') ? document.getElementById('reconSearchInput').value : '').trim().toLowerCase();
+      const filterKho = document.getElementById('reconFilterKho') ? document.getElementById('reconFilterKho').value : 'ALL';
+      const filterStatus = document.getElementById('reconFilterStatus') ? document.getElementById('reconFilterStatus').value : 'ALL';
+
+      const rows = [];
+
+      khoOrder.forEach((cfg) => {
+        if (filterKho !== 'ALL' && cfg.key !== filterKho) return;
+
+        const khoData = (APP_STATE && APP_STATE.doiSoatTheoKho) ? APP_STATE.doiSoatTheoKho[cfg.key] : null;
+        const items = (khoData && khoData.items) ? khoData.items : [];
+
+        // Kiểm tra từ khóa tìm kiếm (theo tên kho, mã SP, tên SP, ngày hoặc chứng từ)
+        if (searchVal) {
+          const matchKhoName = cfg.key.toLowerCase().includes(searchVal);
+          const matchItem = items.some(it =>
+            (it.maSP || '').toLowerCase().includes(searchVal) ||
+            (it.tenSP || '').toLowerCase().includes(searchVal) ||
+            (it.ngayVN || '').toLowerCase().includes(searchVal)
+          );
+          const matchTx = (APP_STATE.lichSu || []).some(tx =>
+            tx.kho === cfg.key &&
+            tx.loai === 'Xuất' &&
+            tx.trangThai === 'Đã xác nhận' &&
+            ((tx.maGD || '').toLowerCase().includes(searchVal) || (tx.maBill || '').toLowerCase().includes(searchVal))
+          );
+          if (!matchKhoName && !matchItem && !matchTx) return;
+        }
+
+        const pendingMap = (typeof getReconPendingDaysMap === 'function') ? getReconPendingDaysMap(monthKey, cfg.key) : {};
+        let slXuat = 0;
+        let slHoaDon = 0;
+        let giaTriXuat = 0;
+        let giaTriHoaDon = 0;
+
+        items.forEach(item => {
+          const isPendingDay = Boolean(pendingMap[item.ngay]);
+          const qXuat = Number(item.xuatThucTe) || 0;
+          const qPos = isPendingDay ? 0 : (Number(item.posThuNgan) || 0);
+          const pInfo = (APP_STATE.products || []).find(p => p.maSP === item.maSP);
+          const donGia = (pInfo && Number(pInfo.donGia) > 0) ? Number(pInfo.donGia) : DON_GIA_BANH_MAC_DINH;
+
+          slXuat += qXuat;
+          slHoaDon += qPos;
+          giaTriXuat += qXuat * donGia;
+          giaTriHoaDon += qPos * donGia;
+        });
+
+        // Chênh lệch hiển thị: (Số lượng hóa đơn LOTTE - Số lượng xuất kho Taekwang)
+        const chenhLech = slHoaDon - slXuat;
+        const isKhop = (chenhLech === 0);
+
+        if (RECON_ACTIVE_TAB === 'diff' && isKhop) return;
+        if (filterStatus === 'KHOP' && !isKhop) return;
+        if (filterStatus === 'LECH' && isKhop) return;
+
+        const hanMucCongNo = getKhoCreditLimitFromSheet(cfg.key);
+        const congNoConLai = hanMucCongNo - giaTriXuat;
+
+        rows.push({
+          kho: cfg.key,
+          dotColor: cfg.dotColor,
+          slXuat,
+          slHoaDon,
+          chenhLech,
+          giaTriXuat,
+          giaTriHoaDon,
+          hanMucCongNo,
+          congNoConLai,
+          isKhop
+        });
+      });
+
+      return rows;
+    }
+
+    function renderReconView() {
       if (!APP_STATE || !APP_STATE.doiSoatTheoKho) return;
-      const kho = document.getElementById('reconKho').value;
-      const khoData = APP_STATE.doiSoatTheoKho[kho];
-      
-      const tbody = document.getElementById('tbodyReconItems');
-      const tfoot = document.getElementById('tfootReconItems');
-      
-      if (!khoData || !khoData.items || khoData.items.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-muted py-4">Chưa có dữ liệu xuất kho nào trong tháng này cho kho ${kho}.</td></tr>`;
-        if (tfoot) tfoot.innerHTML = ''; // Xóa dòng tổng nếu không có dữ liệu
-        recalcReconTotals();
+
+      recalcReconTotals();
+
+      const tbody = document.getElementById('tbodyReconUnified');
+      const tfoot = document.getElementById('tfootReconUnified');
+      if (!tbody || !tfoot) return;
+
+      const rows = getReconWarehouseSummaryRows();
+
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-muted py-4 text-center">Không có dữ liệu đối chiếu phù hợp với bộ lọc hiện tại.</td></tr>`;
+        tfoot.innerHTML = '';
         return;
       }
 
-      // Khởi tạo các biến tính tổng
-      let tongXuat = 0;
-      let tongGiaTri = 0;
-      let tongPOS = 0;
+      let sumSlXuat = 0;
+      let sumSlHoaDon = 0;
+      let sumGiaTriXuat = 0;
+      let sumGiaTriHoaDon = 0;
+      let sumCongNoConLai = 0;
+      let sumAbsDiff = 0;
 
-      tbody.innerHTML = khoData.items.map((item, idx) => {
-        const diff = item.xuatThucTe - item.posThuNgan;
-        const sttBadge = diff === 0
-          ? '<span class="status-badge status-khop">Khớp</span>'
-          : `<span class="status-badge status-lech">${diff > 0 ? 'Thừa xuất' : 'Thiếu xuất'}</span>`;
-        const diffText = diff > 0 ? `+${diff}` : `${diff}`;
-        
-        // Lấy đơn giá và tính giá trị
-        const pInfo = (APP_STATE.products || []).find(p => p.maSP === item.maSP);
-        const donGia = pInfo ? (Number(pInfo.donGia) || 0) : 0;
-        const giaTri = item.xuatThucTe * donGia;
+      tbody.innerHTML = rows.map((r, index) => {
+        sumSlXuat += r.slXuat;
+        sumSlHoaDon += r.slHoaDon;
+        sumGiaTriXuat += r.giaTriXuat;
+        sumGiaTriHoaDon += r.giaTriHoaDon;
+        sumCongNoConLai += r.congNoConLai;
+        sumAbsDiff += Math.abs(r.chenhLech);
 
-        // Cộng dồn vào tổng
-        tongXuat += item.xuatThucTe;
-        tongGiaTri += giaTri;
-        tongPOS += Number(item.posThuNgan) || 0;
+        const diffText = r.chenhLech > 0
+          ? `+${r.chenhLech.toLocaleString('vi-VN')}`
+          : r.chenhLech.toLocaleString('vi-VN');
+        const diffColor = r.chenhLech !== 0 ? '#DC2626' : '#0F172A';
+        const remainColor = r.congNoConLai > 0 ? '#DC2626' : '#0F172A';
+
+        const statusHtml = r.isKhop
+          ? `<span class="recon-status-pill khop"><i class="fas fa-check"></i> Khớp</span>`
+          : `<span class="recon-status-pill lech"><i class="fas fa-exclamation-triangle"></i> Chênh lệch</span>`;
 
         return `
-          <tr>
-            <td class="fw-bold text-primary">${item.ngayVN}</td>
-            <td class="fw-bold">${item.maSP}</td>
-            <td class="text-start">${item.tenSP}</td>
-            <td>${item.donVi}</td>
-            <td class="text-end fw-bold text-dark">${item.xuatThucTe.toLocaleString('vi-VN')}</td>
-            <td class="text-end text-muted" style="font-weight: 500;">${giaTri.toLocaleString('vi-VN')} ₫</td>
-            <td class="text-end">
-              <input type="number" class="input-compact text-end fw-bold text-primary" style="width: 80px; height: 28px; background: #EFF6FF; border-color: #93C5FD;" value="${item.posThuNgan}" 
-                     oninput="updateReconRow(${idx}, this.value)">
+          <tr style="cursor: pointer;"
+              ondblclick="openReconDetailModal('${r.kho}')"
+              title="Nhấp đúp vào dòng kho ${r.kho} để mở cửa sổ chi tiết đối chiếu theo từng ngày">
+            <td class="text-muted fw-semibold">${index + 1}</td>
+            <td class="text-start fw-bold">
+              <span class="kho-dot" style="background: ${r.dotColor};"></span>${r.kho}
             </td>
-            <td class="text-end fw-bold ${diff !== 0 ? 'text-danger' : 'text-success'}">${diffText}</td>
-            <td>${sttBadge}</td>
+            <td class="fw-semibold">${r.slXuat.toLocaleString('vi-VN')}</td>
+            <td ondblclick="event.stopPropagation()">
+              <input type="number"
+                     class="recon-inline-qty-input"
+                     value="${r.slHoaDon}"
+                     min="0"
+                     step="1"
+                     title="Nhấn để chỉnh sửa nhanh hoặc nhấp đúp vào dòng kho để đối chiếu từng ngày"
+                     onchange="updateReconWarehouseInvoiceQty('${r.kho}', this.value)">
+            </td>
+            <td class="fw-bold" style="color: ${diffColor};">${diffText}</td>
+            <td class="fw-semibold">${r.giaTriXuat.toLocaleString('vi-VN')} đ</td>
+            <td class="fw-semibold">${r.giaTriHoaDon.toLocaleString('vi-VN')} đ</td>
+            <td class="fw-bold" style="color: ${remainColor};">${r.congNoConLai.toLocaleString('vi-VN')} đ</td>
+            <td>${statusHtml}</td>
           </tr>
         `;
       }).join('');
 
-      // Render dòng Tổng cộng vào thẻ <tfoot>
-      if (tfoot) {
-        const tongDiff = tongXuat - tongPOS;
-        const tongDiffText = tongDiff > 0 ? `+${tongDiff.toLocaleString('vi-VN')}` : tongDiff.toLocaleString('vi-VN');
-        
-        tfoot.innerHTML = `
-          <tr>
-            <td colspan="4" class="text-end fw-bold text-dark" style="padding: 14px 10px; font-size: 13px;">TỔNG CỘNG:</td>
-            <td class="text-end fw-bold" style="padding: 14px 10px; font-size: 14px; color: #0F172A;">${tongXuat.toLocaleString('vi-VN')}</td>
-            <td class="text-end fw-bold" style="padding: 14px 10px; font-size: 14px; color: #475569;">${tongGiaTri.toLocaleString('vi-VN')} ₫</td>
-            <td class="text-end fw-bold" style="padding: 14px 10px; font-size: 14px; color: #2563EB;">${tongPOS.toLocaleString('vi-VN')}</td>
-            <td class="text-end fw-bold ${tongDiff !== 0 ? 'text-danger' : 'text-success'}" style="padding: 14px 10px; font-size: 14.5px;">${tongDiffText}</td>
-            <td></td>
-          </tr>
-        `;
-      }
+      const totalNetDiff = sumSlHoaDon - sumSlXuat;
+      const totalDiffText = totalNetDiff > 0
+        ? `+${totalNetDiff.toLocaleString('vi-VN')}`
+        : totalNetDiff.toLocaleString('vi-VN');
+      const totalDiffColor = totalNetDiff !== 0 ? '#DC2626' : '#0F172A';
+      const totalRemainColor = sumCongNoConLai > 0 ? '#DC2626' : '#0F172A';
 
-      recalcReconTotals(); // Vẫn giữ lệnh cập nhật 4 thẻ tổng quát bên trên
-      
-      // Khối code phía dưới xử lý bảng "Lịch sử chốt đối soát" giữ nguyên...
-      const histTbody = document.getElementById('tbodyReconHistory');
-      if (!APP_STATE.lichSuDoiSoat || APP_STATE.lichSuDoiSoat.length === 0) {
-        histTbody.innerHTML = `<tr><td colspan="7" class="text-muted py-3">Không có lịch sử lưu.</td></tr>`;
-      } else {
-        histTbody.innerHTML = APP_STATE.lichSuDoiSoat.map(h => {
-          const badge = h.chenhLech === 0
-            ? '<span class="status-badge status-khop">Khớp</span>'
-            : `<span class="status-badge status-lech">${h.trangThai}</span>`;
-          return `
-            <tr>
-              <td>${h.ngayDoiSoat}</td>
-              <td>${h.ngayGiao ? h.ngayGiao.split('-').reverse().join('/') : '-'}</td>
-              <td class="fw-semibold">${h.kho}</td>
-              <td class="text-end fw-bold">${h.xuatThucTe.toLocaleString('vi-VN')}</td>
-              <td class="text-end">${h.posThuNgan.toLocaleString('vi-VN')}</td>
-              <td class="text-end fw-bold ${h.chenhLech !== 0 ? 'text-danger' : ''}">${h.chenhLech}</td>
-              <td>${badge}</td>
-            </tr>
-          `;
-        }).join('');
-      }
+      const matchRate = sumSlXuat > 0
+        ? Math.max(0, (1 - (sumAbsDiff / sumSlXuat)) * 100)
+        : 100;
+      const matchRateStr = matchRate.toFixed(1).replace('.', ',') + '%';
+
+      tfoot.innerHTML = `
+        <tr>
+          <td colspan="2" class="text-center">Tổng cộng</td>
+          <td>${sumSlXuat.toLocaleString('vi-VN')}</td>
+          <td>${sumSlHoaDon.toLocaleString('vi-VN')}</td>
+          <td style="color: ${totalDiffColor};">${totalDiffText}</td>
+          <td>${sumGiaTriXuat.toLocaleString('vi-VN')} đ</td>
+          <td>${sumGiaTriHoaDon.toLocaleString('vi-VN')} đ</td>
+          <td style="color: ${totalRemainColor};">${sumCongNoConLai.toLocaleString('vi-VN')} đ</td>
+          <td style="color: #15803D;">Tỷ lệ khớp: ${matchRateStr}</td>
+        </tr>
+      `;
+    }
+
+    function updateReconWarehouseInvoiceQty(kho, newTotalStr) {
+      if (!APP_STATE || !APP_STATE.doiSoatTheoKho || !APP_STATE.doiSoatTheoKho[kho]) return;
+      const items = APP_STATE.doiSoatTheoKho[kho].items || [];
+      const targetTotal = Math.max(0, Number(newTotalStr) || 0);
+
+      if (items.length === 0) return;
+
+      const monthEl = document.getElementById('reconMonth');
+      const monthKey = (monthEl && monthEl.value) ? monthEl.value : 'DEFAULT';
+      saveReconPendingDaysMap(monthKey, kho, {});
+
+      // Reset các dòng về đúng SL xuất thực tế, sau đó áp dụng phần chênh lệch vào dòng cuối cùng của kho
+      let currentSum = 0;
+      items.forEach((it) => {
+        it.posThuNgan = Number(it.xuatThucTe) || 0;
+        currentSum += it.posThuNgan;
+      });
+
+      const delta = targetTotal - currentSum;
+      const lastItem = items[items.length - 1];
+      lastItem.posThuNgan = Math.max(0, (Number(lastItem.posThuNgan) || 0) + delta);
+
+      const selectEl = document.getElementById('reconKho');
+      if (selectEl) selectEl.value = kho;
+
+      renderReconView();
     }
 
     function updateReconRow(idx, val) {
       const kho = document.getElementById('reconKho').value;
-      APP_STATE.doiSoatTheoKho[kho].items[idx].posThuNgan = Number(val) || 0;
-      renderReconView();
+      if (APP_STATE && APP_STATE.doiSoatTheoKho && APP_STATE.doiSoatTheoKho[kho] && APP_STATE.doiSoatTheoKho[kho].items[idx]) {
+        APP_STATE.doiSoatTheoKho[kho].items[idx].posThuNgan = Number(val) || 0;
+        renderReconView();
+      }
+    }
+
+    function exportReconTableToExcel() {
+      const rows = getReconWarehouseSummaryRows();
+      if (!rows || rows.length === 0) {
+        iosAlert('Không có dữ liệu đối chiếu để xuất Excel!', 'Thông báo');
+        return;
+      }
+
+      const headers = [
+        'STT',
+        'Kho/Đơn vị',
+        'Số lượng xuất kho (Taekwang)',
+        'Số lượng hóa đơn (LOTTE)',
+        'Chênh lệch (Taekwang - LOTTE)',
+        'Giá trị xuất (Taekwang)',
+        'Giá trị hóa đơn (LOTTE)',
+        'Công nợ còn lại',
+        'Trạng thái'
+      ];
+
+      let sumSlXuat = 0, sumSlHoaDon = 0, sumGiaTriXuat = 0, sumGiaTriHoaDon = 0, sumCongNo = 0, sumAbsDiff = 0;
+
+      const csvLines = [headers.join(',')];
+
+      rows.forEach((r, idx) => {
+        sumSlXuat += r.slXuat;
+        sumSlHoaDon += r.slHoaDon;
+        sumGiaTriXuat += r.giaTriXuat;
+        sumGiaTriHoaDon += r.giaTriHoaDon;
+        sumCongNo += r.congNoConLai;
+        sumAbsDiff += Math.abs(r.chenhLech);
+
+        const sttText = r.isKhop ? 'Khớp' : 'Chênh lệch';
+        csvLines.push([
+          idx + 1,
+          `"${r.kho}"`,
+          r.slXuat,
+          r.slHoaDon,
+          r.chenhLech,
+          r.giaTriXuat,
+          r.giaTriHoaDon,
+          r.congNoConLai,
+          `"${sttText}"`
+        ].join(','));
+      });
+
+      const matchRate = sumSlXuat > 0 ? Math.max(0, (1 - (sumAbsDiff / sumSlXuat)) * 100) : 100;
+      csvLines.push([
+        '""',
+        '"Tổng cộng"',
+        sumSlXuat,
+        sumSlHoaDon,
+        sumSlHoaDon - sumSlXuat,
+        sumGiaTriXuat,
+        sumGiaTriHoaDon,
+        sumCongNo,
+        `"Tỷ lệ khớp: ${matchRate.toFixed(1).replace('.', ',')}%"`
+      ].join(','));
+
+      const monthVal = document.getElementById('reconMonth') ? document.getElementById('reconMonth').value : 'MTD';
+      const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Doi_Chieu_Cong_No_Taekwang_${monthVal}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function getReconPaidStorageKey(monthKey, kho) {
+      return `TK_RECON_PAID_${monthKey}_${kho}`;
+    }
+
+    function getKhoPaidAmount(monthKey, kho) {
+      try {
+        const raw = localStorage.getItem(getReconPaidStorageKey(monthKey, kho));
+        return raw !== null ? (Number(raw) || 0) : 0;
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    async function promptPaidAmountForKho(e, kho) {
+      if (e) e.stopPropagation();
+      const monthEl = document.getElementById('reconMonth');
+      const monthKey = (monthEl && monthEl.value) ? monthEl.value : 'DEFAULT';
+      const curPaid = getKhoPaidAmount(monthKey, kho);
+
+      const inputStr = await iosPrompt(
+        `Nhập số tiền Đã thanh toán (VNĐ) của đơn vị [${kho}] trong kỳ ${monthKey}:`,
+        curPaid,
+        `Cập nhật thanh toán - ${kho}`
+      );
+      if (inputStr === null) return;
+
+      const cleanVal = Number(String(inputStr).replace(/[^\d.-]/g, '')) || 0;
+      try {
+        localStorage.setItem(getReconPaidStorageKey(monthKey, kho), String(Math.max(0, cleanVal)));
+      } catch (err) {}
+      recalcReconTotals();
+    }
+
+    function selectReconKhoCard(kho) {
+      const selectEl = document.getElementById('reconKho');
+      if (selectEl) {
+        selectEl.value = kho;
+        renderReconView();
+      }
     }
 
 function recalcReconTotals() {
-      const kho = document.getElementById('reconKho').value;
-      const khoData = APP_STATE.doiSoatTheoKho[kho];
-      let sumXuat = 0, sumPOS = 0;
-      
-      if (khoData && khoData.items) {
-        khoData.items.forEach(i => {
-          sumXuat += Number(i.xuatThucTe) || 0;
-          sumPOS += Number(i.posThuNgan) || 0;
-        });
-      }
-      
-      const diff = sumXuat - sumPOS;
-      document.getElementById('reconSumXuat').innerHTML = `${sumXuat.toLocaleString('vi-VN')} <small>Cái</small>`;
-      document.getElementById('reconSumHD').innerHTML = `${sumPOS.toLocaleString('vi-VN')} <small>Cái</small>`;
-      document.getElementById('reconSumDiff').innerHTML = `${diff.toLocaleString('vi-VN')} <small>Cái</small>`;
-      
-      const sttEl = document.getElementById('reconStatusText');
-      if (diff === 0) {
-        sttEl.innerText = 'Khớp';
-        sttEl.style.color = 'var(--green-status)';
-      } else {
-        sttEl.innerText = diff > 0 ? 'Thừa xuất' : 'Thiếu xuất';
-        sttEl.style.color = 'var(--lotte-red)';
-      }
+      if (!APP_STATE || !APP_STATE.doiSoatTheoKho) return;
+
+      const selectedKho = document.getElementById('reconKho') ? document.getElementById('reconKho').value : 'VT1';
+
+      const khoConfigs = [
+        { key: 'VT1', color: '#15803D', badgeBg: '#DCFCE7', cardBg: 'linear-gradient(135deg, #F4FBF7 0%, #FFFFFF 65%)' },
+        { key: 'VT2', color: '#10B981', badgeBg: '#D1FAE5', cardBg: 'linear-gradient(135deg, #F2FBF9 0%, #FFFFFF 65%)' },
+        { key: 'Mỹ Tho', color: '#D97706', badgeBg: '#FEF3C7', cardBg: 'linear-gradient(135deg, #FFFDF4 0%, #FFFFFF 65%)' },
+        { key: 'MTC', color: '#EF4444', badgeBg: '#FEE2E2', cardBg: 'linear-gradient(135deg, #FFF5F5 0%, #FFFFFF 65%)' },
+        { key: 'Mold', color: '#8B5CF6', badgeBg: '#EDE9FE', cardBg: 'linear-gradient(135deg, #FAF5FF 0%, #FFFFFF 65%)' },
+        { key: 'Bình Phước', color: '#0284C7', badgeBg: '#E0F2FE', cardBg: 'linear-gradient(135deg, #F0F9FF 0%, #FFFFFF 65%)' }
+      ];
+
+      let totalMtdQty = 0;
+      let totalMtdVal = 0;
+      let totalMtdLimit = 0;
+
+      const statsByKho = khoConfigs.map(cfg => {
+        const khoData = APP_STATE.doiSoatTheoKho[cfg.key];
+        let slXuat = 0;
+        let giaTriXuat = 0;
+
+        if (khoData && khoData.items) {
+          khoData.items.forEach(item => {
+            const qty = Number(item.xuatThucTe) || 0;
+            const pInfo = (APP_STATE.products || []).find(p => p.maSP === item.maSP);
+            const donGia = (pInfo && Number(pInfo.donGia) > 0) ? Number(pInfo.donGia) : DON_GIA_BANH_MAC_DINH;
+            slXuat += qty;
+            giaTriXuat += qty * donGia;
+          });
+        }
+
+        const hanMucCongNo = getKhoCreditLimitFromSheet(cfg.key);
+        const congNoConLai = hanMucCongNo - giaTriXuat;
+
+        totalMtdQty += slXuat;
+        totalMtdVal += giaTriXuat;
+        totalMtdLimit += hanMucCongNo;
+
+        return {
+          ...cfg,
+          slXuat,
+          giaTriXuat,
+          hanMucCongNo,
+          congNoConLai
+        };
+      });
+
+      const totalMtdRemain = totalMtdLimit - totalMtdVal;
+
+      // 1. Cập nhật 4 thẻ KPI tổng trên cùng
+      const elQty = document.getElementById('reconMtdTotalQty');
+      const elVal = document.getElementById('reconMtdTotalVal');
+      const elPaid = document.getElementById('reconMtdTotalPaid');
+      const elRemain = document.getElementById('reconMtdTotalRemain');
+
+      if (elQty) elQty.innerText = `${totalMtdQty.toLocaleString('vi-VN')} cái`;
+      if (elVal) elVal.innerText = `${totalMtdVal.toLocaleString('vi-VN')} đ`;
+      if (elPaid) elPaid.innerText = `${totalMtdLimit.toLocaleString('vi-VN')} đ`;
+      if (elRemain) elRemain.innerText = `${totalMtdRemain.toLocaleString('vi-VN')} đ`;
+
+      // 2. Render 6 thẻ Công nợ theo kho/đơn vị (MTD)
+      const container = document.getElementById('reconKhoCardsContainer');
+      if (!container) return;
+
+      const radius = 24;
+      const circumference = 2 * Math.PI * radius;
+
+      container.innerHTML = statsByKho.map(st => {
+        const pctNum = st.hanMucCongNo > 0 ? ((st.giaTriXuat / st.hanMucCongNo) * 100) : 0;
+        const pctLabel = pctNum.toFixed(1).replace('.', ',') + '%';
+        const dashOffset = circumference - (Math.min(100, Math.max(0, pctNum)) / 100) * circumference;
+        const isActive = (st.key === selectedKho) ? 'active-kho' : '';
+
+        return `
+          <div class="recon-kho-card ${isActive}"
+               style="background: ${st.cardBg};"
+               onclick="selectReconKhoCard('${st.key}')"
+               ondblclick="if(typeof openReconDetailModal==='function') openReconDetailModal('${st.key}')"
+               title="Nhấp để chọn • Nhấp đúp để mở chi tiết đối chiếu theo từng ngày của kho ${st.key}">
+            <div class="recon-kho-left">
+              <div class="recon-kho-title-row">
+                <div class="recon-kho-badge" style="background: ${st.badgeBg}; color: ${st.color};">
+                  <i class="fas fa-warehouse"></i>
+                </div>
+                <span class="recon-kho-name">${st.key}</span>
+              </div>
+              <div class="recon-ring-box">
+                <svg class="recon-ring-svg" viewBox="0 0 58 58">
+                  <circle class="recon-ring-bg" cx="29" cy="29" r="${radius}"></circle>
+                  <circle class="recon-ring-meter" cx="29" cy="29" r="${radius}"
+                          stroke="${st.color}"
+                          stroke-dasharray="${circumference.toFixed(2)}"
+                          stroke-dashoffset="${dashOffset.toFixed(2)}"></circle>
+                </svg>
+                <span class="recon-ring-text">${pctLabel}</span>
+              </div>
+            </div>
+
+            <div class="recon-kho-right">
+              <div class="recon-metric-row">
+                <span class="recon-metric-label"><i class="fas fa-cube"></i> SL xuất MTD</span>
+                <span class="recon-metric-val">${st.slXuat.toLocaleString('vi-VN')} cái</span>
+              </div>
+              <div class="recon-metric-row">
+                <span class="recon-metric-label"><i class="fas fa-coins"></i> Giá trị xuất</span>
+                <span class="recon-metric-val">${st.giaTriXuat.toLocaleString('vi-VN')} đ</span>
+              </div>
+              <div class="recon-metric-row">
+                <span class="recon-metric-label"><i class="far fa-credit-card"></i> Hạn mức công nợ</span>
+                <span class="recon-metric-val">${st.hanMucCongNo.toLocaleString('vi-VN')} đ</span>
+              </div>
+              <div class="recon-metric-row debt-remain">
+                <span class="recon-metric-label"><i class="fas fa-wallet"></i> Công nợ còn lại</span>
+                <span class="recon-metric-val">${st.congNoConLai.toLocaleString('vi-VN')} đ</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
-   function saveReconciliation() {
+    function saveReconciliation() {
       const reconEl = document.getElementById('reconMonth');
       const globalEl = document.getElementById('globalTimeInput');
       const monthYear = (reconEl && reconEl.value) ? reconEl.value : (globalEl ? globalEl.value.substring(0, 7) : '');
       const kho = document.getElementById('reconKho').value;
       const items = APP_STATE.doiSoatTheoKho[kho].items;
 
-      callApi('luuDoiSoatMoi', { monthYear: monthYear, kho: kho, rows: items }, (res) => { alert(res.message); reloadAllData(); });
+      callApi('luuDoiSoatMoi', { monthYear: monthYear, kho: kho, rows: items }, async (res) => { 
+        await iosAlert(res.message, res.success ? 'Thành công' : 'Thông báo'); 
+        reloadAllData(); 
+      });
+    }
+
+    /* =========================================================================
+       CỬA SỔ CHI TIẾT ĐỐI CHIẾU THEO TỪNG NGÀY TRONG THÁNG (MODAL)
+    ========================================================================= */
+    let RECON_DETAIL_STATE = {
+      isOpen: false,
+      kho: 'VT1',
+      monthKey: '',
+      days: [],
+      showHistory: false
+    };
+
+    function getReconPendingStorageKey(monthKey, kho) {
+      return `TK_RECON_PENDING_${monthKey}_${kho}`;
+    }
+
+    function getReconPendingDaysMap(monthKey, kho) {
+      try {
+        const raw = localStorage.getItem(getReconPendingStorageKey(monthKey, kho));
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveReconPendingDaysMap(monthKey, kho, mapObj) {
+      try {
+        localStorage.setItem(getReconPendingStorageKey(monthKey, kho), JSON.stringify(mapObj || {}));
+      } catch (e) {}
+    }
+
+    function getReconLocalAuditLog(monthKey, kho) {
+      try {
+        const raw = localStorage.getItem(`TK_RECON_AUDIT_${monthKey}_${kho}`);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function pushReconLocalAuditLog(monthKey, kho, entry) {
+      try {
+        const list = getReconLocalAuditLog(monthKey, kho);
+        list.unshift(entry);
+        localStorage.setItem(`TK_RECON_AUDIT_${monthKey}_${kho}`, JSON.stringify(list.slice(0, 50)));
+      } catch (e) {}
+    }
+
+    function openReconDetailModal(kho) {
+      if (!APP_STATE || !APP_STATE.doiSoatTheoKho) return;
+      const targetKho = kho || (document.getElementById('reconKho') ? document.getElementById('reconKho').value : 'VT1');
+
+      const selectEl = document.getElementById('reconKho');
+      if (selectEl) selectEl.value = targetKho;
+
+      const reconMonthEl = document.getElementById('reconMonth');
+      const globalInputEl = document.getElementById('globalTimeInput');
+      const monthKey = (reconMonthEl && reconMonthEl.value)
+        ? reconMonthEl.value
+        : (globalInputEl && globalInputEl.value ? globalInputEl.value.substring(0, 7) : getLocalYMD().slice(0, 7));
+
+      const modalMonthEl = document.getElementById('rdModalMonthInput');
+      if (modalMonthEl) modalMonthEl.value = monthKey;
+
+      const titleEl = document.getElementById('rdModalKhoTitle');
+      if (titleEl) titleEl.innerText = targetKho;
+
+      const histKhoEl = document.getElementById('rdHistKhoLabel');
+      if (histKhoEl) histKhoEl.innerText = targetKho;
+
+      buildReconDetailDaysState(targetKho, monthKey);
+      RECON_DETAIL_STATE.isOpen = true;
+      RECON_DETAIL_STATE.showHistory = false;
+
+      const histDrawer = document.getElementById('rdHistoryDrawer');
+      if (histDrawer) histDrawer.classList.remove('show');
+
+      renderReconDetailModalContent();
+      document.getElementById('reconDetailModal').classList.add('show');
+    }
+
+    function closeReconDetailModal() {
+      RECON_DETAIL_STATE.isOpen = false;
+      const modal = document.getElementById('reconDetailModal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function onReconDetailMonthChange(newMonthVal) {
+      if (!newMonthVal) return;
+      const currentKho = RECON_DETAIL_STATE.kho || 'VT1';
+      syncReconToGlobal(newMonthVal);
+      setTimeout(() => {
+        if (RECON_DETAIL_STATE.isOpen) {
+          openReconDetailModal(currentKho);
+        }
+      }, 250);
+    }
+
+    function buildReconDetailDaysState(kho, monthKey) {
+      const khoData = (APP_STATE && APP_STATE.doiSoatTheoKho) ? APP_STATE.doiSoatTheoKho[kho] : null;
+      const items = (khoData && khoData.items) ? khoData.items : [];
+      const pendingMap = getReconPendingDaysMap(monthKey, kho);
+
+      const dayGroupMap = {};
+      items.forEach(it => {
+        const dKey = it.ngay;
+        if (!dKey) return;
+        if (!dayGroupMap[dKey]) {
+          dayGroupMap[dKey] = {
+            ngay: dKey,
+            ngayVN: it.ngayVN || dKey.split('-').reverse().join('/'),
+            slXuat: 0,
+            slHoaDonSaved: 0
+          };
+        }
+        dayGroupMap[dKey].slXuat += (Number(it.xuatThucTe) || 0);
+        dayGroupMap[dKey].slHoaDonSaved += (Number(it.posThuNgan) || 0);
+      });
+
+      const sortedDays = Object.values(dayGroupMap).sort((a, b) => a.ngay.localeCompare(b.ngay));
+
+      RECON_DETAIL_STATE.kho = kho;
+      RECON_DETAIL_STATE.monthKey = monthKey;
+      RECON_DETAIL_STATE.days = sortedDays.map(d => {
+        const isPending = Boolean(pendingMap[d.ngay]);
+        return {
+          ngay: d.ngay,
+          ngayVN: d.ngayVN,
+          slXuat: d.slXuat,
+          hoaDonRaw: isPending ? '' : String(d.slHoaDonSaved)
+        };
+      });
+    }
+
+    function renderReconDetailModalContent() {
+      const tbody = document.getElementById('tbodyReconDetailDaily');
+      const tfoot = document.getElementById('tfootReconDetailDaily');
+      if (!tbody || !tfoot) return;
+
+      const days = RECON_DETAIL_STATE.days || [];
+
+      if (days.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-muted py-5 text-center">Không có dữ liệu xuất kho cho đơn vị <strong>${RECON_DETAIL_STATE.kho}</strong> trong tháng này.</td></tr>`;
+        tfoot.innerHTML = '';
+        updateReconDetailKpis(0, 0, 0, 100);
+        return;
+      }
+
+      tbody.innerHTML = days.map((d, idx) => {
+        const rawStr = String(d.hoaDonRaw !== undefined ? d.hoaDonRaw : '').trim();
+        const isPending = (rawStr === '');
+        const slHoaDon = isPending ? 0 : (Number(rawStr) || 0);
+        const diff = d.slXuat - slHoaDon;
+        const displayDiff = slHoaDon - d.slXuat; // Hiển thị đồng bộ dấu với bảng chính và mẫu thiết kế
+
+        let diffHtml = `<span class="text-muted">—</span>`;
+        let statusHtml = `<span class="rd-status-badge pending"><i class="far fa-clock"></i> Chờ nhập</span>`;
+        let inputClass = 'rd-qty-input';
+
+        if (!isPending) {
+          if (diff === 0) {
+            diffHtml = `<span class="fw-bold" style="color: #0F172A;">0</span>`;
+            statusHtml = `<span class="rd-status-badge khop"><i class="fas fa-check"></i> Khớp</span>`;
+          } else {
+            const signStr = displayDiff > 0 ? `+${displayDiff.toLocaleString('vi-VN')}` : displayDiff.toLocaleString('vi-VN');
+            diffHtml = `<span class="fw-bold" style="color: #DC2626;">${signStr}</span>`;
+            statusHtml = `<span class="rd-status-badge lech"><i class="fas fa-exclamation-triangle"></i> Chênh lệch</span>`;
+            inputClass += ' input-diff';
+          }
+        }
+
+        return `
+          <tr id="rd-row-${idx}">
+            <td class="text-muted fw-semibold">${idx + 1}</td>
+            <td class="text-start fw-semibold">${d.ngayVN}</td>
+            <td class="text-end fw-bold">${d.slXuat.toLocaleString('vi-VN')}</td>
+            <td>
+              <input type="number"
+                     id="rd-input-${idx}"
+                     class="${inputClass}"
+                     value="${isPending ? '' : slHoaDon}"
+                     min="0"
+                     step="1"
+                     placeholder="Nhập số lượng..."
+                     oninput="onReconDetailInput(${idx}, this.value)">
+            </td>
+            <td class="text-end" id="rd-diff-${idx}">${diffHtml}</td>
+            <td id="rd-status-${idx}">${statusHtml}</td>
+          </tr>
+        `;
+      }).join('');
+
+      recalcReconDetailSummaryOnly();
+    }
+
+    function onReconDetailInput(idx, rawValue) {
+      if (!RECON_DETAIL_STATE.days || !RECON_DETAIL_STATE.days[idx]) return;
+      const d = RECON_DETAIL_STATE.days[idx];
+      d.hoaDonRaw = rawValue;
+
+      const rawStr = String(rawValue !== undefined ? rawValue : '').trim();
+      const isPending = (rawStr === '');
+      const slHoaDon = isPending ? 0 : (Number(rawStr) || 0);
+      const diff = d.slXuat - slHoaDon;
+      const displayDiff = slHoaDon - d.slXuat;
+
+      const inputEl = document.getElementById(`rd-input-${idx}`);
+      const diffEl = document.getElementById(`rd-diff-${idx}`);
+      const statusEl = document.getElementById(`rd-status-${idx}`);
+
+      if (isPending) {
+        if (inputEl) inputEl.classList.remove('input-diff');
+        if (diffEl) diffEl.innerHTML = `<span class="text-muted">—</span>`;
+        if (statusEl) statusEl.innerHTML = `<span class="rd-status-badge pending"><i class="far fa-clock"></i> Chờ nhập</span>`;
+      } else if (diff === 0) {
+        if (inputEl) inputEl.classList.remove('input-diff');
+        if (diffEl) diffEl.innerHTML = `<span class="fw-bold" style="color: #0F172A;">0</span>`;
+        if (statusEl) statusEl.innerHTML = `<span class="rd-status-badge khop"><i class="fas fa-check"></i> Khớp</span>`;
+      } else {
+        const signStr = displayDiff > 0 ? `+${displayDiff.toLocaleString('vi-VN')}` : displayDiff.toLocaleString('vi-VN');
+        if (inputEl) inputEl.classList.add('input-diff');
+        if (diffEl) diffEl.innerHTML = `<span class="fw-bold" style="color: #DC2626;">${signStr}</span>`;
+        if (statusEl) statusEl.innerHTML = `<span class="rd-status-badge lech"><i class="fas fa-exclamation-triangle"></i> Chênh lệch</span>`;
+      }
+
+      recalcReconDetailSummaryOnly();
+    }
+
+    function recalcReconDetailSummaryOnly() {
+      const days = RECON_DETAIL_STATE.days || [];
+      const tfoot = document.getElementById('tfootReconDetailDaily');
+
+      let totalXuat = 0;
+      let totalHoaDon = 0;
+      let totalAbsDiff = 0;
+      let hasPending = false;
+      let hasLech = false;
+
+      days.forEach(d => {
+        const rawStr = String(d.hoaDonRaw !== undefined ? d.hoaDonRaw : '').trim();
+        const isPending = (rawStr === '');
+        const slHoaDon = isPending ? 0 : (Number(rawStr) || 0);
+        const diff = d.slXuat - slHoaDon;
+
+        totalXuat += d.slXuat;
+        totalHoaDon += slHoaDon;
+
+        if (isPending) {
+          hasPending = true;
+          totalAbsDiff += d.slXuat;
+        } else {
+          if (diff !== 0) hasLech = true;
+          totalAbsDiff += Math.abs(diff);
+        }
+      });
+
+      const netDisplayDiff = totalHoaDon - totalXuat;
+      const matchRate = totalXuat > 0
+        ? Math.max(0, (1 - (totalAbsDiff / totalXuat)) * 100)
+        : 100;
+
+      updateReconDetailKpis(totalXuat, totalHoaDon, netDisplayDiff, matchRate);
+
+      if (!tfoot || days.length === 0) return;
+
+      let footStatusHtml = `<span class="rd-status-badge khop"><i class="fas fa-check"></i> Khớp</span>`;
+      if (hasLech) {
+        footStatusHtml = `<span class="rd-status-badge lech"><i class="fas fa-exclamation-triangle"></i> Chênh lệch</span>`;
+      } else if (hasPending) {
+        footStatusHtml = `<span class="rd-status-badge pending"><i class="far fa-clock"></i> Chờ nhập</span>`;
+      }
+
+      const netDiffText = netDisplayDiff > 0
+        ? `+${netDisplayDiff.toLocaleString('vi-VN')}`
+        : netDisplayDiff.toLocaleString('vi-VN');
+      const netDiffColor = netDisplayDiff !== 0 ? '#DC2626' : '#0F172A';
+
+      tfoot.innerHTML = `
+        <tr>
+          <td colspan="2" class="text-center">Tổng cộng</td>
+          <td class="text-end">${totalXuat.toLocaleString('vi-VN')}</td>
+          <td class="text-center">${totalHoaDon.toLocaleString('vi-VN')}</td>
+          <td class="text-end" style="color: ${netDiffColor};">${netDiffText}</td>
+          <td class="text-center">${footStatusHtml}</td>
+        </tr>
+      `;
+    }
+
+    function updateReconDetailKpis(totalXuat, totalHoaDon, netDiff, matchRate) {
+      const elXuat = document.getElementById('rdKpiTotalXuat');
+      const elHoaDon = document.getElementById('rdKpiTotalHoaDon');
+      const elRate = document.getElementById('rdKpiMatchRate');
+      const elDiff = document.getElementById('rdKpiTotalDiff');
+
+      if (elXuat) elXuat.innerText = `${totalXuat.toLocaleString('vi-VN')} cái`;
+      if (elHoaDon) elHoaDon.innerText = `${totalHoaDon.toLocaleString('vi-VN')} cái`;
+      if (elRate) {
+        elRate.innerText = `${matchRate.toFixed(1).replace('.', ',')}%`;
+        elRate.style.color = matchRate >= 99.95 ? '#15803D' : (matchRate >= 80 ? '#D97706' : '#DC2626');
+      }
+      if (elDiff) {
+        const diffSign = netDiff > 0 ? `+${netDiff.toLocaleString('vi-VN')}` : netDiff.toLocaleString('vi-VN');
+        elDiff.innerText = `${diffSign} cái`;
+        elDiff.style.color = netDiff !== 0 ? '#DC2626' : '#0F172A';
+      }
+    }
+
+    function saveReconDetailModal() {
+      const kho = RECON_DETAIL_STATE.kho;
+      const monthKey = RECON_DETAIL_STATE.monthKey;
+      if (!APP_STATE || !APP_STATE.doiSoatTheoKho || !APP_STATE.doiSoatTheoKho[kho]) return;
+
+      const items = APP_STATE.doiSoatTheoKho[kho].items || [];
+      const newPendingMap = {};
+      const dayTargetMap = {};
+
+      (RECON_DETAIL_STATE.days || []).forEach(d => {
+        const rawStr = String(d.hoaDonRaw !== undefined ? d.hoaDonRaw : '').trim();
+        if (rawStr === '') {
+          newPendingMap[d.ngay] = true;
+          dayTargetMap[d.ngay] = 0;
+        } else {
+          dayTargetMap[d.ngay] = Math.max(0, Number(rawStr) || 0);
+        }
+      });
+
+      saveReconPendingDaysMap(monthKey, kho, newPendingMap);
+
+      // Phân bổ số lượng hóa đơn đã nhập theo từng ngày vào danh sách items của kho
+      const itemsByDay = {};
+      items.forEach(it => {
+        if (!itemsByDay[it.ngay]) itemsByDay[it.ngay] = [];
+        itemsByDay[it.ngay].push(it);
+      });
+
+      Object.keys(itemsByDay).forEach(ngay => {
+        const dayItems = itemsByDay[ngay];
+        if (newPendingMap[ngay]) {
+          dayItems.forEach(it => {
+            it.posThuNgan = 0;
+            it.chenhLech = (Number(it.xuatThucTe) || 0);
+            it.trangThai = 'Chờ nhập';
+          });
+        } else {
+          const targetTotal = dayTargetMap[ngay] !== undefined ? dayTargetMap[ngay] : 0;
+          let sumXuatDay = 0;
+          dayItems.forEach(it => {
+            it.posThuNgan = Number(it.xuatThucTe) || 0;
+            sumXuatDay += it.posThuNgan;
+          });
+          const delta = targetTotal - sumXuatDay;
+          const lastIt = dayItems[dayItems.length - 1];
+          lastIt.posThuNgan = Math.max(0, (Number(lastIt.posThuNgan) || 0) + delta);
+
+          dayItems.forEach(it => {
+            it.chenhLech = (Number(it.xuatThucTe) || 0) - (Number(it.posThuNgan) || 0);
+            it.trangThai = it.chenhLech === 0 ? 'Khớp' : (it.chenhLech > 0 ? 'Thừa xuất' : 'Thiếu xuất');
+          });
+        }
+      });
+
+      // Lưu lịch sử nhập cục bộ
+      const now = new Date();
+      const tsStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const sumXuatAll = (RECON_DETAIL_STATE.days || []).reduce((s, d) => s + d.slXuat, 0);
+      const sumPosAll = (RECON_DETAIL_STATE.days || []).reduce((s, d) => {
+        const r = String(d.hoaDonRaw !== undefined ? d.hoaDonRaw : '').trim();
+        return s + (r === '' ? 0 : (Number(r) || 0));
+      }, 0);
+
+      pushReconLocalAuditLog(monthKey, kho, {
+        thoiGian: tsStr,
+        kho: kho,
+        tongXuat: sumXuatAll,
+        tongHoaDon: sumPosAll,
+        chenhLech: sumPosAll - sumXuatAll
+      });
+
+      renderReconView();
+
+      const btnSave = document.getElementById('btnSaveReconDetail');
+      const oldBtnHtml = btnSave ? btnSave.innerHTML : '';
+      if (btnSave) {
+        btnSave.disabled = true;
+        btnSave.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang lưu...`;
+      }
+
+      callApi('luuDoiSoatMoi', { monthYear: monthKey, kho: kho, rows: items }, async (res) => {
+        if (btnSave) {
+          btnSave.disabled = false;
+          btnSave.innerHTML = oldBtnHtml;
+        }
+        closeReconDetailModal();
+        await iosAlert(res.message, res.success ? 'Lưu đối chiếu thành công' : 'Thông báo');
+        reloadAllData();
+      });
+    }
+
+    function toggleReconDetailHistory() {
+      const drawer = document.getElementById('rdHistoryDrawer');
+      if (!drawer) return;
+      RECON_DETAIL_STATE.showHistory = !RECON_DETAIL_STATE.showHistory;
+      if (RECON_DETAIL_STATE.showHistory) {
+        renderReconDetailHistory();
+        drawer.classList.add('show');
+      } else {
+        drawer.classList.remove('show');
+      }
+    }
+
+    function renderReconDetailHistory() {
+      const container = document.getElementById('rdHistoryContent');
+      if (!container) return;
+
+      const kho = RECON_DETAIL_STATE.kho;
+      const monthKey = RECON_DETAIL_STATE.monthKey;
+
+      const localLogs = getReconLocalAuditLog(monthKey, kho);
+      const serverLogs = ((APP_STATE && APP_STATE.lichSuDoiSoat) ? APP_STATE.lichSuDoiSoat : []).filter(
+        r => r.kho === kho && (r.thangNam === monthKey || (r.ngayGiao && r.ngayGiao.startsWith(monthKey)))
+      );
+
+      if (localLogs.length === 0 && serverLogs.length === 0) {
+        container.innerHTML = `<div class="text-muted py-2" style="font-size: 12px;">Chưa có lịch sử lưu đối chiếu nào cho kho <strong>${kho}</strong> trong kỳ ${monthKey}.</div>`;
+        return;
+      }
+
+      let rowsHtml = '';
+      localLogs.forEach(l => {
+        const diffColor = l.chenhLech !== 0 ? '#DC2626' : '#15803D';
+        rowsHtml += `
+          <tr>
+            <td class="text-start">${l.thoiGian}</td>
+            <td>Tổng hợp kỳ ${monthKey}</td>
+            <td class="text-end fw-semibold">${Number(l.tongXuat).toLocaleString('vi-VN')}</td>
+            <td class="text-end fw-semibold">${Number(l.tongHoaDon).toLocaleString('vi-VN')}</td>
+            <td class="text-end fw-bold" style="color:${diffColor};">${l.chenhLech > 0 ? '+' + l.chenhLech.toLocaleString('vi-VN') : l.chenhLech.toLocaleString('vi-VN')}</td>
+            <td><span class="badge bg-light text-dark border">Đã lưu</span></td>
+          </tr>
+        `;
+      });
+
+      serverLogs.slice(0, 20).forEach(s => {
+        const diffVal = Number(s.posThuNgan || 0) - Number(s.xuatThucTe || 0);
+        const diffColor = diffVal !== 0 ? '#DC2626' : '#15803D';
+        const ngayGiaoVN = s.ngayGiao ? s.ngayGiao.split('-').reverse().join('/') : '--';
+        rowsHtml += `
+          <tr>
+            <td class="text-start">${s.ngayDoiSoat || '--'}</td>
+            <td>Ngày giao ${ngayGiaoVN} (${s.maSP || ''})</td>
+            <td class="text-end fw-semibold">${Number(s.xuatThucTe || 0).toLocaleString('vi-VN')}</td>
+            <td class="text-end fw-semibold">${Number(s.posThuNgan || 0).toLocaleString('vi-VN')}</td>
+            <td class="text-end fw-bold" style="color:${diffColor};">${diffVal > 0 ? '+' + diffVal.toLocaleString('vi-VN') : diffVal.toLocaleString('vi-VN')}</td>
+            <td><span class="badge ${diffVal === 0 ? 'bg-success' : 'bg-danger'}">${diffVal === 0 ? 'Khớp' : 'Chênh lệch'}</span></td>
+          </tr>
+        `;
+      });
+
+      container.innerHTML = `
+        <table class="table table-sm mb-0 text-center" style="font-size: 11.5px;">
+          <thead>
+            <tr class="text-muted">
+              <th class="text-start">Thời gian chốt</th>
+              <th>Nội dung / Ngày giao</th>
+              <th class="text-end">Xuất (Taekwang)</th>
+              <th class="text-end">Hóa đơn (LOTTE)</th>
+              <th class="text-end">Chênh lệch</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    function exportReconDetailExcel() {
+      const days = RECON_DETAIL_STATE.days || [];
+      const kho = RECON_DETAIL_STATE.kho || 'VT1';
+      const monthKey = RECON_DETAIL_STATE.monthKey || 'MTD';
+
+      if (days.length === 0) {
+        iosAlert('Không có dữ liệu chi tiết theo ngày để xuất Excel!', 'Thông báo');
+        return;
+      }
+
+      const headers = [
+        'STT',
+        'Ngày',
+        'Số lượng xuất kho (Taekwang)',
+        'Số lượng hóa đơn (LOTTE)',
+        'Chênh lệch (Taekwang - LOTTE)',
+        'Trạng thái'
+      ];
+
+      const csvLines = [headers.join(',')];
+      let sumXuat = 0;
+      let sumHoaDon = 0;
+
+      days.forEach((d, idx) => {
+        const rawStr = String(d.hoaDonRaw !== undefined ? d.hoaDonRaw : '').trim();
+        const isPending = (rawStr === '');
+        const slHoaDon = isPending ? 0 : (Number(rawStr) || 0);
+        const displayDiff = slHoaDon - d.slXuat;
+
+        sumXuat += d.slXuat;
+        sumHoaDon += slHoaDon;
+
+        const sttText = isPending ? 'Chờ nhập' : (displayDiff === 0 ? 'Khớp' : 'Chênh lệch');
+        csvLines.push([
+          idx + 1,
+          `"${d.ngayVN}"`,
+          d.slXuat,
+          isPending ? '""' : slHoaDon,
+          isPending ? '"-"' : displayDiff,
+          `"${sttText}"`
+        ].join(','));
+      });
+
+      const netDiff = sumHoaDon - sumXuat;
+      csvLines.push([
+        '""',
+        '"Tổng cộng"',
+        sumXuat,
+        sumHoaDon,
+        netDiff,
+        `"${netDiff === 0 ? 'Khớp' : 'Chênh lệch'}"`
+      ].join(','));
+
+      const blob = new Blob(['\uFEFF' + csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Chi_Tiet_Doi_Chieu_${kho}_${monthKey}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
     function toggleSelectAllTx(cb) {
       const checkboxes = document.querySelectorAll('.tx-checkbox');
@@ -5929,71 +8249,28 @@ function recalcReconTotals() {
         }
       }
     }
-
-    function promptBulkCancelTx() {
-      const checkboxes = document.querySelectorAll('.tx-checkbox:checked');
-      if (checkboxes.length === 0) return;
-      
-      const rowIndexes = Array.from(checkboxes).map(c => c.value);
-      const lyDo = prompt(`Bạn đang chọn ${rowIndexes.length} giao dịch.\n\nNhập lý do HỦY HÀNG LOẠT (Dữ liệu sẽ chuyển sang trạng thái Đã hủy và tính lại tồn kho):`);
-      if (!lyDo) return;
-      
-      const btnBulk = document.getElementById('btnBulkCancel');
-      const oldText = btnBulk.innerHTML;
-      btnBulk.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-      btnBulk.disabled = true;
-
-      callApi('huyNhieuGiaoDich', { rowIndexes: rowIndexes, lyDo: lyDo, nguoiThucHien: 'Nguyễn Hữu Quan' }, (res) => { 
-        alert(res.message); 
-        btnBulk.innerHTML = oldText;
-        btnBulk.disabled = false;
-        reloadAllData(); 
-      });
-    }
     /* =========================================================================
        THƯ VIỆN ĐIỀU KHIỂN HỘP THOẠI (MODAL) VÀ SPINNER PHONG CÁCH IOS NATIVE
     ========================================================================= */
     // 1. Quản lý trạng thái Spinner Loading
   
-// 1. Quản lý trạng thái Spinner Loading (Đỏ -> Vàng -> Xanh lá)
-    let loaderTimer;
-
+// 1. Quản lý trạng thái Spinner Loading (Độ trễ = 0: Không khóa màn hình)
     function showGlobalLoader() {
       const loader = document.getElementById('globalLoader');
-      const circle = loader.querySelector('.ios-spinner-circle');
-      const text = loader.querySelector('.ios-spinner-text');
-
-      // Giai đoạn 1: Mới bắt đầu (Màu Đỏ)
-      clearTimeout(loaderTimer);
-      circle.className = 'ios-spinner-circle spinner-red';
-      text.innerText = 'Đang kết nối...';
-      loader.classList.add('show');
-
-      // Giai đoạn 2: Giả lập chờ tải lâu (Chuyển màu Vàng sau 1.5 giây)
-      loaderTimer = setTimeout(() => {
-        circle.className = 'ios-spinner-circle spinner-yellow';
-        text.innerText = 'Đang đồng bộ dữ liệu...';
-      }, 1500);
+      if (loader) {
+        loader.classList.remove('show');
+        loader.style.display = 'none';
+      }
     }
 
     function hideGlobalLoader() {
       const loader = document.getElementById('globalLoader');
-      const circle = loader.querySelector('.ios-spinner-circle');
-      const text = loader.querySelector('.ios-spinner-text');
-
-      clearTimeout(loaderTimer);
-
-      // Giai đoạn 3: Tải xong (Chuyển màu Xanh lá báo thành công)
-      circle.className = 'ios-spinner-circle spinner-green';
-      text.innerText = 'Đã hoàn tất!';
-
-      // Dừng lại 0.5 giây để người dùng kịp nhìn thấy màu xanh lá rồi mới ẩn đi
-      setTimeout(() => {
+      if (loader) {
         loader.classList.remove('show');
-      }, 500);
+        loader.style.display = 'none';
+      }
     }
-
-    // 2. Hàm lõi tạo hộp thoại Modal
+    // 2. Hàm lõi tạo hộp thoại Modal (Phản hồi tức thì 0ms)
     function showIosModal(options) {
       return new Promise((resolve) => {
         const modal = document.getElementById('iosModal');
@@ -6008,7 +8285,7 @@ function recalcReconTotals() {
         if (options.type === 'prompt') {
           inputEl.style.display = 'block';
           inputEl.value = options.defaultValue || '';
-          setTimeout(() => inputEl.focus(), 300); // Tự động trỏ nháy chuột vào ô nhập
+          setTimeout(() => inputEl.focus(), 0);
         } else {
           inputEl.style.display = 'none';
           inputEl.value = '';
@@ -6018,7 +8295,7 @@ function recalcReconTotals() {
 
         const closeModal = (returnValue) => {
           modal.classList.remove('show');
-          setTimeout(() => resolve(returnValue), 250); // Chờ hiệu ứng mờ dần (fade out)
+          resolve(returnValue);
         };
 
         if (options.type === 'alert') {
@@ -6050,6 +8327,93 @@ function recalcReconTotals() {
     const iosAlert = (message, title = 'Thông báo') => showIosModal({ type: 'alert', title, message });
     const iosConfirm = (message, title = 'Xác nhận', isDanger = false) => showIosModal({ type: 'confirm', title, message, isDanger });
     const iosPrompt = (message, defaultValue = '', title = 'Nhập thông tin') => showIosModal({ type: 'prompt', title, message, defaultValue });
+    // Hàm render biểu đồ Chart.js (Biểu đồ tổng quan)
+    function drawMainChart(labels, nhap, xuat, ton) {
+      const canvas = document.getElementById('mainChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      
+      // Dọn dẹp biểu đồ cũ để tránh lỗi vẽ chồng
+      if (window.chartInstance) {
+        window.chartInstance.destroy();
+      }
+
+      // Tạo hiệu ứng Gradient mờ dần cho đường Tồn Kho
+      const gradientTon = ctx.createLinearGradient(0, 0, 0, 300);
+      gradientTon.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
+      gradientTon.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+      window.chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Tồn kho',
+              data: ton,
+              borderColor: '#2563EB',
+              backgroundColor: gradientTon,
+              borderWidth: 2.5,
+              fill: true,           
+              tension: 0.4,         
+              pointRadius: 0,       
+              pointHoverRadius: 6,  
+              pointBackgroundColor: '#ffffff',
+              pointBorderColor: '#2563EB',
+              pointBorderWidth: 2.5,
+              order: 1
+            },
+            {
+              type: 'bar',
+              label: 'Nhập',
+              data: nhap,
+              backgroundColor: '#10B981',
+              borderRadius: 6,      
+              barPercentage: 0.7,   
+              categoryPercentage: 0.75,
+              order: 2
+            },
+            {
+              type: 'bar',
+              label: 'Xuất',
+              data: xuat,
+              backgroundColor: '#F43F5E',
+              borderRadius: 6,
+              barPercentage: 0.7,
+              categoryPercentage: 0.75,
+              order: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: { usePointStyle: true, boxWidth: 8, font: { size: 12, weight: '600' }, padding: 20 }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(15, 23, 42, 0.9)', 
+              padding: 12, cornerRadius: 8, boxPadding: 4
+            }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              beginAtZero: true,
+              grid: { color: '#E2E8F0', borderDash: [5, 5], drawBorder: false },
+              title: { display: true, text: 'Số lượng (Cái)', font: { size: 11, weight: '600' }, color: '#64748B' }
+            }
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>
