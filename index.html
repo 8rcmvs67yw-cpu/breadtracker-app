@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <!-- MÃ MỚI: Thư viện JsBarcode tạo mã vạch chuẩn để súng POS thu ngân quét được -->
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
@@ -4162,34 +4162,46 @@
       <div>
         <h1 id="mainPageTitle" style="font-size: 19px; font-weight: 700; color: #0F172A; margin: 0;">Tổng quan</h1>
         <p id="mainPageDesc" style="font-size: 12px; color: #64748B; margin: 2px 0 0 0; font-weight: 400;">
-          Tổng hợp nhập hàng, xuất giao, tồn kho và đối chiếu công nợ.
+          Tổng hợp nhập hàng, xuất giao, tồn kho và đối chiếu công nợ. <span style="color:#EF4444; font-weight:600;">(*Đơn vị: Cái / VNĐ)</span>
         </p>
       </div>
+      
+      <!-- KHU VỰC BỘ LỌC TOÀN CỤC CHUẨN APPLE CAPSULE -->
       <div class="header-controls">
-       <!-- Thanh tìm kiếm chuẩn Apple iOS -->
-        <div class="ios-search-bar">
-          <div class="ios-time-tabs">
+        
+        <!-- Capsule 1: Bộ lọc thời gian (Ngày/Tuần/Tháng/Năm) -->
+        <div class="ios-search-bar" style="padding: 4px 10px; border-radius: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; box-shadow: inset 1px 1px 4px rgba(15,23,42,0.03);">
+          <div class="ios-time-tabs" style="display: flex; gap: 2px; align-items: center;">
             <button class="ios-tab" data-type="day" onclick="changeGlobalTimeType('day', this)">Ngày</button>
             <button class="ios-tab" data-type="week" onclick="changeGlobalTimeType('week', this)">Tuần</button>
             <button class="ios-tab active" data-type="month" onclick="changeGlobalTimeType('month', this)">Tháng</button>
             <button class="ios-tab" data-type="year" onclick="changeGlobalTimeType('year', this)">Năm</button>
           </div>
-          <div style="width: 1px; height: 18px; background: #CBD5E1; margin: 0 4px;"></div>
-          <i class="far fa-calendar-alt text-muted" style="margin-left: 6px;"></i>
-          <input type="month" id="globalTimeInput" class="ios-date-input" onchange="reloadAllData()">
+          <div style="width: 1px; height: 18px; background: #CBD5E1; margin: 0 6px;"></div>
+          <i class="far fa-calendar-alt text-muted" style="font-size: 13px;"></i>
+          <input type="month" id="globalTimeInput" class="ios-date-input" style="margin-left: 6px; padding: 0; background: transparent; border: none; font-size: 13px; color: #0F172A; font-weight: 700; outline: none; cursor: pointer; width: 140px;" onchange="syncGlobalFilters()">
+          
+          <!-- Các trường ẩn giữ tương thích với logic cũ -->
           <input type="hidden" id="globalTimeType" value="month">
+          <input type="hidden" id="reconMonth" value="">
         </div>
-        <!-- Giữ thẻ select Kho ẩn để không ảnh hưởng logic hàm reloadAllData() -->
-        <select id="globalKho" onchange="reloadAllData()" style="display: none;">
-          <option value="ALL">Tất cả kho</option>
-          <option value="LOTTE Mart DNI">Kho LOTTE Mart DNI</option>
-          <option value="VT1">Kho VT1</option>
-          <option value="VT2">Kho VT2</option>
-          <option value="Mỹ Tho">Kho Mỹ Tho</option>
-          <option value="MTC">Kho MTC</option>
-          <option value="Mold">Kho Mold</option>
-          <option value="Bình Phước">Kho Bình Phước</option>
-        </select>
+        
+        <!-- Capsule 2: Kho đối soát -->
+        <div class="ios-search-bar" style="padding: 5px 12px; border-radius: 12px; background: #ffffff; border: 1px solid #E2E8F0; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);">
+          <i class="fas fa-warehouse text-muted" style="font-size: 12px;"></i>
+          <select id="globalKho" class="ios-date-input" style="margin-left: 6px; padding: 0; background: transparent; border: none; font-size: 13px; color: #0F172A; font-weight: 700; outline: none; cursor: pointer;" onchange="syncGlobalFilters()">
+            <option value="ALL">Tất cả kho</option>
+            <option value="LOTTE Mart DNI">Kho LOTTE Mart DNI</option>
+            <option value="VT1">Kho VT1</option>
+            <option value="VT2">Kho VT2</option>
+            <option value="Mỹ Tho">Kho Mỹ Tho</option>
+            <option value="MTC">Kho MTC</option>
+            <option value="Mold">Kho Mold</option>
+            <option value="Bình Phước">Kho Bình Phước</option>
+          </select>
+          <input type="hidden" id="reconKho" value="VT1">
+        </div>
+
        <!-- Nút chuông thông báo -->
         <div class="notif-bell btn-outline" style="width: 38px; height: 38px; border-radius: 12px;" onclick="switchMenu('dashboard', document.querySelector('.nav-btn[data-tab=\'dashboard\']')); setTimeout(function(){ document.getElementById('cardCanhBaoHSD').scrollIntoView({behavior:'smooth'}); }, 200);" title="Xem cảnh báo hạn sử dụng">
           <i class="far fa-bell" style="font-size: 15px;"></i>
@@ -4747,27 +4759,8 @@
 
       <!-- ================= ĐỐI CHIẾU CÔNG NỢ ================= -->
       <section id="pane-reconciliation" class="view-pane">
-        <div class="app-card mb-3">
-          <div class="row g-3 align-items-end mb-3">
-            <div class="col-md-3">
-              <label class="form-label-compact">Tháng/Năm</label>
-              <input type="month" class="input-compact" id="reconMonth" onchange="syncReconToGlobal(this.value)">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label-compact">Kho đối soát</label>
-              <select class="input-compact" id="reconKho" onchange="renderReconView()">
-                <option value="VT1">Kho VT1</option>
-                <option value="VT2">Kho VT2</option>
-                <option value="Mỹ Tho">Kho Mỹ Tho</option>
-                <option value="MTC">Kho MTC</option>
-                <option value="Mold">Kho Mold</option>
-                <option value="Bình Phước">Kho Bình Phước</option>
-              </select>
-            </div>
-            <div class="col-md-3 text-end">
-              <button class="btn-action btn-green w-100" onclick="saveReconciliation()">Chốt công nợ</button>
-            </div>
-          </div>
+        <div class="app-card mb-3" style="padding-top: 18px;">
+          <!-- (2 ô chọn Tháng/Năm & Kho đối soát đã được dời lên góc trên cùng Header) -->
 
           <!-- HÀNG 1: 4 THẺ TỔNG HỢP CÔNG NỢ MTD -->
           <div class="recon-mtd-top-grid">
@@ -5413,7 +5406,18 @@
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyatUX9cZmZyEzLtRMSijBRHqD3ptGLnETXjr3s1sYriRjSGl5qgEKRqsHkygxVTMlF/exec";
 
-   function callApi(action, data, onSuccess) {
+    function callApi(action, data, onSuccess) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onSuccess)
+          .withFailureHandler(err => {
+            iosAlert("Lỗi hệ thống: " + (err && err.message ? err.message : err), "Lỗi kết nối");
+            document.getElementById('globalLoader').style.display = 'none';
+          })
+          .handleClientApi(action, data);
+        return;
+      }
+
       fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: action, data: data }) })
       .then(res => res.json()).then(onSuccess)
       .catch(err => { 
@@ -5442,14 +5446,14 @@
         if (lblXuat) lblXuat.innerText = `Tổng xuất ${data.kpi.periodLabel.toLowerCase()}`;
       }
 
-      // 1. Cập nhật Số lượng (Cái) trên 4 thẻ KPI hàng đầu
+// 1. Cập nhật Số lượng (Cái) trên 4 thẻ KPI hàng đầu
       const tonQty = Number(data.kpi.tonHienTai) || 0;
       const nhapQty = Number(data.kpi.tongNhapThang) || 0;
       const xuatQty = Number(data.kpi.tongXuatThang) || 0;
 
-      document.getElementById('kpiTon').innerHTML = `${tonQty.toLocaleString('vi-VN')} <small>Cái</small>`;
-      document.getElementById('kpiNhap').innerHTML = `${nhapQty.toLocaleString('vi-VN')} <small>Cái</small>`;
-      document.getElementById('kpiXuat').innerHTML = `${xuatQty.toLocaleString('vi-VN')} <small>Cái</small>`;
+      document.getElementById('kpiTon').innerHTML = `${tonQty.toLocaleString('vi-VN')}`;
+      document.getElementById('kpiNhap').innerHTML = `${nhapQty.toLocaleString('vi-VN')}`;
+      document.getElementById('kpiXuat').innerHTML = `${xuatQty.toLocaleString('vi-VN')}`;
 
       const netDC = (data.kpi.tongDCTangThang || 0) - (data.kpi.tongDCGiamThang || 0);
       const dcText = netDC >= 0 ? `+${netDC}` : `${netDC}`;
@@ -5466,7 +5470,7 @@
 
       const elSapHetHan = document.getElementById('kpiSapHetHan');
       if (elSapHetHan) {
-        elSapHetHan.innerHTML = `${expiringSoonQty.toLocaleString('vi-VN')} <small>Cái</small>`;
+        elSapHetHan.innerHTML = `${expiringSoonQty.toLocaleString('vi-VN')}`;
       }
 
       // Cập nhật Giá trị (VNĐ) bên dưới số lượng của 4 thẻ KPI
@@ -5614,52 +5618,58 @@
               const pos = arc.tooltipPosition();
               ctx.fillText(pctVal + '%', pos.x, pos.y);
             }
-          });
+});
           ctx.restore();
         }
       };
 
-      const donutCtx = document.getElementById('khoDoughnutChart').getContext('2d');
-      if (doughnutChartInstance) doughnutChartInstance.destroy();
-      doughnutChartInstance = new Chart(donutCtx, {
-        type: 'doughnut',
-        data: {
-          labels: hsdGroups.map(g => g.label),
-          datasets: [{
-            data: sumHsdStock > 0 ? hsdGroups.map(g => g.qty) : [1, 1, 1, 1],
-            backgroundColor: sumHsdStock > 0 ? hsdGroups.map(g => g.color) : ['#E2E8F0', '#E2E8F0', '#E2E8F0', '#E2E8F0'],
-            borderColor: '#FFFFFF',
-            borderWidth: 2.5,
-            hoverOffset: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '64%',
-          onClick: function(evt, elements) {
-            if (elements && elements.length > 0) {
-              const clickedIdx = elements[0].index;
-              if (hsdGroups[clickedIdx]) {
-                filterFefoByHsdGroup(hsdGroups[clickedIdx].key);
-              }
-            }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
+      try {
+        if (typeof Chart !== 'undefined') {
+          const donutCtx = document.getElementById('khoDoughnutChart').getContext('2d');
+          if (doughnutChartInstance) doughnutChartInstance.destroy();
+          doughnutChartInstance = new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+              labels: hsdGroups.map(g => g.label),
+              datasets: [{
+                data: sumHsdStock > 0 ? hsdGroups.map(g => g.qty) : [1, 1, 1, 1],
+                backgroundColor: sumHsdStock > 0 ? hsdGroups.map(g => g.color) : ['#E2E8F0', '#E2E8F0', '#E2E8F0', '#E2E8F0'],
+                borderColor: '#FFFFFF',
+                borderWidth: 2.5,
+                hoverOffset: 6
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '64%',
+              onClick: function(evt, elements) {
+                if (elements && elements.length > 0) {
+                  const clickedIdx = elements[0].index;
+                  if (hsdGroups[clickedIdx]) {
+                    filterFefoByHsdGroup(hsdGroups[clickedIdx].key);
+                  }
+                }
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                 label: function(context) {
                   if (sumHsdStock <= 0) return ' Chưa có tồn kho';
                   const grp = hsdGroups[context.dataIndex];
-                  return ` ${grp.label}: ${grp.qty.toLocaleString('vi-VN')} Cái (${grp.pct}%)`;
+                  return ` ${grp.label}: ${grp.qty.toLocaleString('vi-VN')} (${grp.pct}%)`;
+                }
+                  }
                 }
               }
-            }
-          }
-        },
-        plugins: [slicePctLabelPlugin]
-      });
+            },
+            plugins: [slicePctLabelPlugin]
+          });
+        }
+      } catch (e) {
+        console.warn('Lỗi vẽ biểu đồ Doughnut:', e);
+      }
 
 // Render chi tiết tồn kho theo Date HSD vào bảng phụ (Cột phải của Hàng 2.2)
       renderHsdDetailTable(data.fefo);
@@ -5822,56 +5832,61 @@
             }
          }
       });
-
-      // Gọi hàm vẽ biểu đồ phụ (kho mua) - Kiểm tra và vẽ nội tuyến
-      const canvas = document.getElementById('khoPurchaseChart');
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        if (window.khoPurchaseChartInst) window.khoPurchaseChartInst.destroy();
-        
-        window.khoPurchaseChartInst = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: labels,
-            datasets: datasets2
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: { usePointStyle: true, boxWidth: 8, font: { size: 12, weight: '600' } }
-              },
-              tooltip: {
-                mode: 'index',
-                intersect: false,
-                callbacks: {
-                  footer: function(items) {
-                     const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
-                     return 'Tổng cộng: ' + total.toLocaleString('vi-VN') + ' Cái';
+// Gọi hàm vẽ biểu đồ phụ (kho mua) - Kiểm tra và vẽ nội tuyến
+          try {
+            if (typeof Chart !== 'undefined') {
+              const canvas = document.getElementById('khoPurchaseChart');
+              if (canvas) {
+                const ctx = canvas.getContext('2d');
+                if (window.khoPurchaseChartInst) window.khoPurchaseChartInst.destroy();
+                
+                window.khoPurchaseChartInst = new Chart(ctx, {
+                  type: 'bar',
+                  data: {
+                    labels: labels,
+                    datasets: datasets2
+                  },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true, boxWidth: 8, font: { size: 12, weight: '600' } }
+                      },
+                      tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                          footer: function(items) {
+                             const total = items.reduce((sum, item) => sum + item.parsed.y, 0);
+                             return 'Tổng cộng: ' + total.toLocaleString('vi-VN') + ' Cái';
+                          }
+                        }
+                      }
+                    },
+                    scales: {
+                      x: {
+                        stacked: true,
+                        grid: { display: false },
+                        ticks: { font: { size: 10.5 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 16 }
+                      },
+                      y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: { display: true, text: 'Số lượng mua (Cái)', font: { size: 11 } },
+                        grid: { color: '#F1F5F9' },
+                        ticks: { font: { size: 10.5 } }
+                      }
+                    }
                   }
-                }
-              }
-            },
-            scales: {
-              x: {
-                stacked: true,
-                grid: { display: false },
-                ticks: { font: { size: 10.5 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 16 }
-              },
-              y: {
-                stacked: true,
-                beginAtZero: true,
-                title: { display: true, text: 'Số lượng mua (Cái)', font: { size: 11 } },
-                grid: { color: '#F1F5F9' },
-                ticks: { font: { size: 10.5 } }
+                });
               }
             }
+          } catch (e) {
+            console.warn('Lỗi vẽ biểu đồ kho mua:', e);
           }
-        });
-      }
-      
+          
 // GỌI HÀM VẼ BẢNG CHI TIẾT
       renderChartDetailTable();
     }
@@ -6174,29 +6189,38 @@ function renderHsdDetailTable(fefoData) {
       const yyyy_mm_dd = getLocalYMD(now);
       const yyyy_mm = yyyy_mm_dd.slice(0, 7);
       
-      document.getElementById('reconMonth').value = yyyy_mm;
-      document.getElementById('txNgay').value = yyyy_mm_dd;
+      if(document.getElementById('globalTimeInput')) {
+        document.getElementById('globalTimeInput').value = yyyy_mm;
+      }
+      if(document.getElementById('reconMonth')) {
+        document.getElementById('reconMonth').value = yyyy_mm;
+      }
+      if(document.getElementById('txNgay')) {
+        document.getElementById('txNgay').value = yyyy_mm_dd;
+      }
       
       syncAllVNDateInputs();
       setInterval(syncAllVNDateInputs, 150);
 
       setTxMode('Nhập'); 
       
-      // Tự động gọi chức năng xem theo Tuần khi vừa khởi động
+      // Tự động chuyển sang xem theo Tuần khi vừa khởi động (mặc định)
       const btnTuan = document.querySelector('.ios-tab[data-type="week"]');
       if (btnTuan) {
         changeGlobalTimeType('week', btnTuan);
       } else {
-        reloadAllData(); // Dự phòng nếu không tìm thấy nút
+        reloadAllData(); 
       }
     };
 
     // --- HÀM CHUYỂN ĐỔI CHẾ ĐỘ TÌM KIẾM ---
     function changeGlobalTimeType(type, btnEl) {
+      // 1. Đổi UI nút bấm
       document.querySelectorAll('.ios-tab').forEach(el => el.classList.remove('active'));
       btnEl.classList.add('active');
       document.getElementById('globalTimeType').value = type;
       
+      // 2. Chuyển đổi loại input (date, week, month, number)
       const inputEl = document.getElementById('globalTimeInput');
       const now = new Date();
       const yyyy_mm_dd = getLocalYMD(now);
@@ -6220,8 +6244,36 @@ function renderHsdDetailTable(fefoData) {
         inputEl.type = 'month';
         inputEl.value = yyyy_mm_dd.slice(0, 7);
       }
-      syncAllVNDateInputs();
+      
+      if (typeof syncAllVNDateInputs === 'function') syncAllVNDateInputs();
+      
+      // 3. Tự động đồng bộ và tải lại dữ liệu
+      syncGlobalFilters();
+    }
+
+    // --- HÀM ĐỒNG BỘ BỘ LỌC TOÀN CỤC ---
+    function syncGlobalFilters() {
+      const timeVal = document.getElementById('globalTimeInput').value;
+      const khoVal = document.getElementById('globalKho').value;
+      
+      const reconMonthEl = document.getElementById('reconMonth');
+      const reconKhoEl = document.getElementById('reconKho');
+      
+      // Đồng bộ Tháng/Năm cho module Đối soát
+      if (reconMonthEl) reconMonthEl.value = timeVal;
+      
+      // Đồng bộ Kho đối soát (Chỉ đổi nếu Kho thuộc nhóm đích, bỏ qua nếu chọn Tất cả/LOTTE)
+      if (reconKhoEl && ['VT1', 'VT2', 'Mỹ Tho', 'MTC', 'Mold', 'Bình Phước'].includes(khoVal)) {
+        reconKhoEl.value = khoVal;
+      }
+
       reloadAllData();
+      
+      // Nếu đang ở Tab Đối chiếu thì chủ động vẽ lại bảng
+      const paneRecon = document.getElementById('pane-reconciliation');
+      if (paneRecon && paneRecon.classList.contains('active')) {
+        if (typeof renderReconView === 'function') renderReconView();
+      }
     }
 
     function switchMenu(tabName, el) {
@@ -6234,39 +6286,23 @@ function renderHsdDetailTable(fefoData) {
       const targetPane = document.getElementById('pane-' + tabName);
       if (targetPane) targetPane.classList.add('active');
 
-      // 3. Tự động thay đổi tiêu đề chính và mô tả trên đỉnh trang tùy thuộc vào Tab đang xem
+      // 3. Tự động thay đổi tiêu đề chính và mô tả tùy thuộc vào Tab đang xem
       const titleEl = document.getElementById('mainPageTitle');
       const descEl = document.getElementById('mainPageDesc');
+      
       if (titleEl && descEl) {
+        const note = ' <span style="color:#EF4444; font-weight:600;">(*Đơn vị: Cái / VNĐ)</span>';
         if (tabName === 'dashboard') {
           titleEl.innerText = 'Tổng quan';
-          descEl.innerText = 'Tổng hợp nhập hàng, xuất giao, tồn kho và đối chiếu công nợ.';
+          descEl.innerHTML = 'Tổng hợp nhập hàng, xuất giao, tồn kho và đối chiếu công nợ.' + note;
         } else if (tabName === 'transaction') {
           titleEl.innerText = 'Quản lý hàng hóa';
-          descEl.innerText = 'Ghi nhận nhập hàng, xuất giao và theo dõi tồn kho LOTTE Mart.';
+          descEl.innerHTML = 'Ghi nhận nhập hàng, xuất giao và theo dõi tồn kho LOTTE Mart.' + note;
         } else if (tabName === 'reconciliation') {
           titleEl.innerText = 'Đối chiếu công nợ';
-          descEl.innerText = 'So sánh số lượng giao thực tế với hóa đơn, xác định chênh lệch.';
+          descEl.innerHTML = 'So sánh số lượng giao thực tế với hóa đơn, xác định chênh lệch.' + note;
         }
       }
-    }
-
-// Hàm mới: Ép Top Header đồng bộ theo tab Đối chiếu công nợ
-    function syncReconToGlobal(monthVal) {
-      const globalTypeEl = document.getElementById('globalTimeType');
-      const globalInputEl = document.getElementById('globalTimeInput');
-
-      if (globalTypeEl && globalInputEl) {
-        // Tự động chuyển Top Header sang chế độ 'Tháng'
-        globalTypeEl.value = 'month';
-        document.querySelectorAll('.ios-tab').forEach(el => el.classList.remove('active'));
-        const monthTab = document.querySelector('.ios-tab[data-type="month"]');
-        if (monthTab) monthTab.classList.add('active');
-
-        globalInputEl.type = 'month';
-        globalInputEl.value = monthVal;
-      }
-      reloadAllData();
     }
 
 const APP_DATA_CACHE = {};
@@ -6293,7 +6329,7 @@ const APP_DATA_CACHE = {};
         if (reconMonthEl) {
           if (globalTypeEl.value === 'month') {
             reconMonthEl.value = globalInputEl.value;
-          } else if (globalInputEl.value) {
+          } else if (globalTypeEl.value === 'day' && /^\d{4}-\d{2}/.test(globalInputEl.value)) {
             reconMonthEl.value = globalInputEl.value.substring(0, 7);
           }
         }
@@ -6310,15 +6346,22 @@ const APP_DATA_CACHE = {};
           const savedStr = localStorage.getItem(cacheKey) || localStorage.getItem('TK_CACHE_LAST_ACTIVE');
           if (savedStr) {
             const parsedData = JSON.parse(savedStr);
-            APP_DATA_CACHE[cacheKey] = parsedData;
-            applyAppStateInstant(parsedData, timePayload);
+            if (parsedData && parsedData.kpi) {
+              APP_DATA_CACHE[cacheKey] = parsedData;
+              applyAppStateInstant(parsedData, timePayload);
+            }
           }
         } catch (e) {}
       }
 
       // 2. ĐỒNG BỘ NGẦM DƯỚI NỀN (KHÔNG CHẶN MÀN HÌNH)
       callApi('getAppData', { monthYear: timePayload, khoFilter: khoFilter }, (data) => {
+        if (data && data.success === false && data.message) {
+          iosAlert(data.message, 'Lỗi tải dữ liệu');
+          return;
+        }
         if (!data || !data.kpi) return;
+
         APP_DATA_CACHE[cacheKey] = data;
         try {
           const jsonStr = JSON.stringify(data);
@@ -6329,7 +6372,7 @@ const APP_DATA_CACHE = {};
         const curType = document.getElementById('globalTimeType') ? document.getElementById('globalTimeType').value : 'month';
         const curInput = document.getElementById('globalTimeInput') ? document.getElementById('globalTimeInput').value : '';
         const curKho = document.getElementById('globalKho') ? document.getElementById('globalKho').value : 'ALL';
-        if (`${curType}|${curInput}` === timePayload && curKho === khoFilter) {
+        if (!APP_STATE || (`${curType}|${curInput}` === timePayload && curKho === khoFilter)) {
           applyAppStateInstant(data, timePayload);
         }
       });
@@ -6432,16 +6475,16 @@ function autoFillProduct() {
           const giaBan = found.giaBan || found.donGia || 0;
           const profit = giaBan - giaMua;
           
-          let profitText = '--';
+         let profitText = '--';
           if (giaMua > 0) {
             const profitPct = Math.round((profit / giaMua) * 100);
-            profitText = `${profit.toLocaleString('vi-VN')} đ (${profitPct}%)`;
+            profitText = `${profit.toLocaleString('vi-VN')} (${profitPct}%)`;
           } else if (giaBan > 0) {
-            profitText = `${profit.toLocaleString('vi-VN')} đ (Chưa nhập giá mua)`;
+            profitText = `${profit.toLocaleString('vi-VN')} (Chưa nhập giá mua)`;
           }
 
-          document.getElementById('lblProdBuyPrice').innerText = giaMua > 0 ? giaMua.toLocaleString('vi-VN') + ' đ' : 'Chưa có';
-          document.getElementById('lblProdSellPrice').innerText = giaBan > 0 ? giaBan.toLocaleString('vi-VN') + ' đ' : '--';
+          document.getElementById('lblProdBuyPrice').innerText = giaMua > 0 ? giaMua.toLocaleString('vi-VN') : 'Chưa có';
+          document.getElementById('lblProdSellPrice').innerText = giaBan > 0 ? giaBan.toLocaleString('vi-VN') : '--';
           
           document.getElementById('lblProdProfit').innerText = profitText;
           document.getElementById('lblProdProfit').className = (profit > 0 && giaMua > 0) ? 'fw-bold text-success' : (profit < 0 ? 'fw-bold text-danger' : 'fw-bold text-primary');
@@ -6486,10 +6529,10 @@ function autoFillProduct() {
 
       if (maSP && APP_STATE.tonKhaDungHienTai[kho] && APP_STATE.tonKhaDungHienTai[kho][maSP]) {
         const info = APP_STATE.tonKhaDungHienTai[kho][maSP];
-        badge.innerHTML = `Tồn khả dụng [${kho} - ${maSP}]: <strong>${info.khaDung.toLocaleString('vi-VN')}</strong> Cái (Thực tế: ${info.tonThucTe})`;
+        badge.innerHTML = `Tồn khả dụng [${kho} - ${maSP}]: <strong>${info.khaDung.toLocaleString('vi-VN')}</strong> (Thực tế: ${info.tonThucTe})`;
       } else {
         const totalKho = (APP_STATE.tonTheoKho && APP_STATE.tonTheoKho[kho]) || 0;
-        badge.innerHTML = `Tổng tồn kho [${kho}]: <strong>${totalKho.toLocaleString('vi-VN')}</strong> Cái`;
+        badge.innerHTML = `Tổng tồn kho [${kho}]: <strong>${totalKho.toLocaleString('vi-VN')}</strong>`;
       }
     }
 
@@ -6953,8 +6996,8 @@ function handleSaveTx(e) {
       const itemCount = txList.length;
       const totalAmount = txList.reduce((sum, item) => sum + (Number(item.soLuong) || 0) * (Number(item.donGia) || 0), 0);
 
-      document.getElementById('scValQty').innerText = `${itemCount} mặt hàng (${txObj.soLuong.toLocaleString('vi-VN')} Cái)`;
-      document.getElementById('scValTotal').innerText = `${totalAmount.toLocaleString('en-US')} ₫`;
+     document.getElementById('scValQty').innerText = `${itemCount} mặt hàng (${txObj.soLuong.toLocaleString('vi-VN')})`;
+      document.getElementById('scValTotal').innerText = `${totalAmount.toLocaleString('en-US')}`;
 
       const exportButtons = ['btnScPreview', 'btnScPrint', 'btnScPrintSales', 'btnScPreviewSales', 'btnScPrintHoreca', 'btnScPreviewHoreca'];
       exportButtons.forEach(id => {
@@ -7781,9 +7824,9 @@ const DON_GIA_BANH_MAC_DINH = 4100;
                      onchange="updateReconWarehouseInvoiceQty('${r.kho}', this.value)">
             </td>
             <td class="fw-bold" style="color: ${diffColor};">${diffText}</td>
-            <td class="fw-semibold">${r.giaTriXuat.toLocaleString('vi-VN')} đ</td>
-            <td class="fw-semibold">${r.giaTriHoaDon.toLocaleString('vi-VN')} đ</td>
-            <td class="fw-bold" style="color: ${remainColor};">${r.congNoConLai.toLocaleString('vi-VN')} đ</td>
+            <td class="fw-semibold">${r.giaTriXuat.toLocaleString('vi-VN')}</td>
+            <td class="fw-semibold">${r.giaTriHoaDon.toLocaleString('vi-VN')}</td>
+            <td class="fw-bold" style="color: ${remainColor};">${r.congNoConLai.toLocaleString('vi-VN')}</td>
             <td>${statusHtml}</td>
           </tr>
         `;
@@ -7807,9 +7850,9 @@ const DON_GIA_BANH_MAC_DINH = 4100;
           <td>${sumSlXuat.toLocaleString('vi-VN')}</td>
           <td>${sumSlHoaDon.toLocaleString('vi-VN')}</td>
           <td style="color: ${totalDiffColor};">${totalDiffText}</td>
-          <td>${sumGiaTriXuat.toLocaleString('vi-VN')} đ</td>
-          <td>${sumGiaTriHoaDon.toLocaleString('vi-VN')} đ</td>
-          <td style="color: ${totalRemainColor};">${sumCongNoConLai.toLocaleString('vi-VN')} đ</td>
+          <td>${sumGiaTriXuat.toLocaleString('vi-VN')}</td>
+          <td>${sumGiaTriHoaDon.toLocaleString('vi-VN')}</td>
+          <td style="color: ${totalRemainColor};">${sumCongNoConLai.toLocaleString('vi-VN')}</td>
           <td style="color: #15803D;">Tỷ lệ khớp: ${matchRateStr}</td>
         </tr>
       `;
@@ -8020,10 +8063,11 @@ function recalcReconTotals() {
       const elPaid = document.getElementById('reconMtdTotalPaid');
       const elRemain = document.getElementById('reconMtdTotalRemain');
 
-      if (elQty) elQty.innerText = `${totalMtdQty.toLocaleString('vi-VN')} cái`;
-      if (elVal) elVal.innerText = `${totalMtdVal.toLocaleString('vi-VN')} đ`;
-      if (elPaid) elPaid.innerText = `${totalMtdLimit.toLocaleString('vi-VN')} đ`;
-      if (elRemain) elRemain.innerText = `${totalMtdRemain.toLocaleString('vi-VN')} đ`;
+      // Trong hàm recalcReconTotals()
+      if (elQty) elQty.innerText = `${totalMtdQty.toLocaleString('vi-VN')}`;
+      if (elVal) elVal.innerText = `${totalMtdVal.toLocaleString('vi-VN')}`;
+      if (elPaid) elPaid.innerText = `${totalMtdLimit.toLocaleString('vi-VN')}`;
+      if (elRemain) elRemain.innerText = `${totalMtdRemain.toLocaleString('vi-VN')}`;
 
       // 2. Render 6 thẻ Công nợ theo kho/đơn vị (MTD)
       const container = document.getElementById('reconKhoCardsContainer');
@@ -8066,19 +8110,19 @@ function recalcReconTotals() {
             <div class="recon-kho-right">
               <div class="recon-metric-row">
                 <span class="recon-metric-label"><i class="fas fa-cube"></i> SL xuất MTD</span>
-                <span class="recon-metric-val">${st.slXuat.toLocaleString('vi-VN')} cái</span>
+                <span class="recon-metric-val">${st.slXuat.toLocaleString('vi-VN')}</span>
               </div>
               <div class="recon-metric-row">
                 <span class="recon-metric-label"><i class="fas fa-coins"></i> Giá trị xuất</span>
-                <span class="recon-metric-val">${st.giaTriXuat.toLocaleString('vi-VN')} đ</span>
+                <span class="recon-metric-val">${st.giaTriXuat.toLocaleString('vi-VN')}</span>
               </div>
               <div class="recon-metric-row">
                 <span class="recon-metric-label"><i class="far fa-credit-card"></i> Hạn mức công nợ</span>
-                <span class="recon-metric-val">${st.hanMucCongNo.toLocaleString('vi-VN')} đ</span>
+                <span class="recon-metric-val">${st.hanMucCongNo.toLocaleString('vi-VN')}</span>
               </div>
               <div class="recon-metric-row debt-remain">
                 <span class="recon-metric-label"><i class="fas fa-wallet"></i> Công nợ còn lại</span>
-                <span class="recon-metric-val">${st.congNoConLai.toLocaleString('vi-VN')} đ</span>
+                <span class="recon-metric-val">${st.congNoConLai.toLocaleString('vi-VN')}</span>
               </div>
             </div>
           </div>
@@ -8086,18 +8130,8 @@ function recalcReconTotals() {
       }).join('');
     }
 
-    function saveReconciliation() {
-      const reconEl = document.getElementById('reconMonth');
-      const globalEl = document.getElementById('globalTimeInput');
-      const monthYear = (reconEl && reconEl.value) ? reconEl.value : (globalEl ? globalEl.value.substring(0, 7) : '');
-      const kho = document.getElementById('reconKho').value;
-      const items = APP_STATE.doiSoatTheoKho[kho].items;
-
-      callApi('luuDoiSoatMoi', { monthYear: monthYear, kho: kho, rows: items }, async (res) => { 
-        await iosAlert(res.message, res.success ? 'Thành công' : 'Thông báo'); 
-        reloadAllData(); 
-      });
-    }
+    // Đã loại bỏ hàm saveReconciliation() ở màn hình tổng. 
+    // Luồng chốt công nợ được tập trung xử lý an toàn tại hàm saveReconDetailModal() bên dưới.
 
     /* =========================================================================
        CỬA SỔ CHI TIẾT ĐỐI CHIẾU THEO TỪNG NGÀY TRONG THÁNG (MODAL)
@@ -8392,15 +8426,15 @@ function recalcReconTotals() {
       const elRate = document.getElementById('rdKpiMatchRate');
       const elDiff = document.getElementById('rdKpiTotalDiff');
 
-      if (elXuat) elXuat.innerText = `${totalXuat.toLocaleString('vi-VN')} cái`;
-      if (elHoaDon) elHoaDon.innerText = `${totalHoaDon.toLocaleString('vi-VN')} cái`;
+     if (elXuat) elXuat.innerText = `${totalXuat.toLocaleString('vi-VN')}`;
+      if (elHoaDon) elHoaDon.innerText = `${totalHoaDon.toLocaleString('vi-VN')}`;
       if (elRate) {
         elRate.innerText = `${matchRate.toFixed(1).replace('.', ',')}%`;
         elRate.style.color = matchRate >= 99.95 ? '#15803D' : (matchRate >= 80 ? '#D97706' : '#DC2626');
       }
-      if (elDiff) {
+     if (elDiff) {
         const diffSign = netDiff > 0 ? `+${netDiff.toLocaleString('vi-VN')}` : netDiff.toLocaleString('vi-VN');
-        elDiff.innerText = `${diffSign} cái`;
+        elDiff.innerText = `${diffSign}`;
         elDiff.style.color = netDiff !== 0 ? '#DC2626' : '#0F172A';
       }
     }
@@ -8734,6 +8768,7 @@ function recalcReconTotals() {
     const iosPrompt = (message, defaultValue = '', title = 'Nhập thông tin') => showIosModal({ type: 'prompt', title, message, defaultValue });
     // Hàm render biểu đồ Chart.js (Biểu đồ tổng quan)
     function drawMainChart(labels, nhap, xuat, ton) {
+      if (typeof Chart === 'undefined') return;
       const canvas = document.getElementById('mainChart');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
